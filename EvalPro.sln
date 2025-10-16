@@ -2,8 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvalProService", "EvalProService\EvalProService.csproj", "{72165665-254F-49C5-B507-84554EF4F81B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvalProUI", "EvalProUI\EvalProUI.csproj", "{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,18 +24,6 @@ Global
 		{72165665-254F-49C5-B507-84554EF4F81B}.Release|x64.Build.0 = Release|Any CPU
 		{72165665-254F-49C5-B507-84554EF4F81B}.Release|x86.ActiveCfg = Release|Any CPU
 		{72165665-254F-49C5-B507-84554EF4F81B}.Release|x86.Build.0 = Release|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Debug|x64.Build.0 = Debug|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Debug|x86.Build.0 = Debug|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Release|x64.ActiveCfg = Release|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Release|x64.Build.0 = Release|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Release|x86.ActiveCfg = Release|Any CPU
-		{4FE9367A-F6C5-4CF3-A6AF-3515BBD99728}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
