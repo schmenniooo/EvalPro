@@ -1,10 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvalProService", "EvalProService\EvalProService.csproj", "{9995995C-C52E-4E35-A9E3-1A519F2AA764}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvalPro.Service", "EvalPro.Service\EvalPro.Service.csproj", "{9995995C-C52E-4E35-A9E3-1A519F2AA764}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvalProServiceTest", "EvalProServiceTest\EvalProServiceTest.csproj", "{F92383F7-B614-4032-8891-7E4FDFDBE702}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvalPro.Service.Test", "EvalPro.Service.Test\EvalPro.Service.Test.csproj", "{F92383F7-B614-4032-8891-7E4FDFDBE702}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvalProUI", "EvalProUI\EvalProUI.csproj", "{0EC800AB-1DDD-4926-B91B-DA86F8A6CA9D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvalPro.UI", "EvalPro.UI\EvalPro.UI.csproj", "{0EC800AB-1DDD-4926-B91B-DA86F8A6CA9D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
