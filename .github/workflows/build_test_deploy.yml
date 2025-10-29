@@ -28,7 +28,7 @@ jobs:
   deploy:
     name: Create Release ZIP
     runs-on: windows-latest
-    needs: build-and-test
+    needs: build_test
     #if: github.ref == 'refs/heads/main'
     
     steps:
