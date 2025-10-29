@@ -21,4 +21,9 @@
         <Using Include="NUnit.Framework"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="src\api\" />
+      <Folder Include="src\service\db\" />
+    </ItemGroup>
+
 </Project>

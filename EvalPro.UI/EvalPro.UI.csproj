@@ -10,4 +10,9 @@
         <RootNamespace>EvalProUI</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="src\controllers\" />
+      <Folder Include="src\model\" />
+    </ItemGroup>
+
 </Project>
