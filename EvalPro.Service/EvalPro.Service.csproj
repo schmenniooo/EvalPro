@@ -7,4 +7,8 @@
         <RootNamespace>EvalProService</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="src\service\model\" />
+    </ItemGroup>
+
 </Project>

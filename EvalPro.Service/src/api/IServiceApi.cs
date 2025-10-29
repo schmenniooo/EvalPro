@@ -1,6 +1,6 @@
 ﻿namespace EvalProService;
 
-public class EvalProServiceApi
+public interface IServiceApi
 {
     
 }
