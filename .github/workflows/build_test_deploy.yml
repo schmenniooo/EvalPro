@@ -8,6 +8,7 @@ on:
     
 jobs: 
   build_test:
+    name: Build and Test Solution
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -62,4 +63,4 @@ jobs:
           name: "Release ${{ github.run_number }}"
           files: artifact/App.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
