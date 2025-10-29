@@ -32,7 +32,7 @@ release:
   name: Create Release ZIP
   runs-on: windows-latest
   needs: build-and-test
-  if: github.ref == 'refs/heads/main'
+  #if: github.ref == 'refs/heads/main'
   
   steps:
     - name: Checkout repository
