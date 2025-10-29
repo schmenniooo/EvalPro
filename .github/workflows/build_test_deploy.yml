@@ -1,0 +1,73 @@
+name: Build_Test_Deploy_Solution
+
+on:
+  pull_request:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    
+permissions:
+  contents: write
+
+jobs: 
+  build_test:
+    name: Build and Test Solution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9.0
+          
+      - name: Restore dependencies
+        run: dotnet restore
+      
+      - name: Build
+        run: dotnet build --no-restore
+        
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+
+  deploy:
+    name: Create Release ZIP
+    runs-on: windows-latest
+    needs: build_test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+  
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0
+  
+      - name: Build (Release)
+        run: dotnet publish -c Release -o out
+
+      - name: Create ZIP
+        run: |
+          mkdir artifact
+          powershell Compress-Archive -Path out/* -DestinationPath artifact/App.zip
+
+      - name: Upload ZIP as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-zip
+          path: artifact/App.zip
+
+      - name: Create Tag
+        run: git tag v${{ github.run_number }} && git push origin v${{ github.run_number }}
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "Release ${{ github.run_number }}"
+          files: artifact/App.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
