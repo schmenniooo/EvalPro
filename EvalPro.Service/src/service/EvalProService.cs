@@ -1,6 +1,6 @@
 namespace EvalProService.api;
 
-public class EvalProService
+public class EvalProService : EvalProServiceApi
 {
     
 }
