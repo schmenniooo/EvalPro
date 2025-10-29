@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     
 jobs: 
-  build:
+  build_test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,11 +24,8 @@ jobs:
         
       - name: Test
         run: dotnet test --no-build --verbosity normal
-      
-      - name: Deploy
-        run: dotnet publish --configuration Release --no-build --output ./publish
 
-release:
+deploy:
   name: Create Release ZIP
   runs-on: windows-latest
   needs: build-and-test
