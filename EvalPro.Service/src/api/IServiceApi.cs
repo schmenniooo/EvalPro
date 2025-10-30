@@ -1,4 +1,4 @@
-﻿namespace EvalProService;
+﻿namespace EvalProService.api;
 
 public interface IServiceApi
 {
