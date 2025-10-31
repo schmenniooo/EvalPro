@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="src\service\model\" />
+      <Folder Include="src\impl\model\" />
     </ItemGroup>
 
 </Project>

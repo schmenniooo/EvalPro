@@ -1,9 +1,9 @@
 using EvalProService.api;
 using EvalProService.db;
 
-namespace EvalProService.service;
+namespace EvalProService.impl;
 
-internal class EvalProService : IServiceApi
+public class EvalProService : IServiceApi
 {
     private readonly ServiceDataController _dataController = new();
 

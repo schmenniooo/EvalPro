@@ -3,13 +3,11 @@ using EvalProService.api;
 
 namespace EvalProServiceTest.service;
 
-public class EvalProServiceTest(IServiceApi serviceApi)
+public class EvalProServiceTest
 {
-    private readonly IServiceApi _serviceApi = serviceApi;
-
     public void Test()
     {
-        
+        IServiceApi serviceApi = new EvalProService.impl.EvalProService();
     }
 
 }
