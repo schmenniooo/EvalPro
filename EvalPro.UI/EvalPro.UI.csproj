@@ -4,15 +4,16 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net9.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
-        <UseWindowsForms>true</UseWindowsForms>
+        <UseWPF>true</UseWPF>
         <ImplicitUsings>enable</ImplicitUsings>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <RootNamespace>EvalProUI</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="src\controllers\" />
-      <Folder Include="src\model\" />
+        <Folder Include="src\controllers\" />
+        <Folder Include="src\model\" />
+      <Folder Include="src\views\" />
     </ItemGroup>
 
 </Project>
