@@ -8,13 +8,6 @@ namespace EvalProService.impl;
 public class EvalProService : IServiceApi
 {
     private readonly ServiceData _data;
-    
-    private List<AuditCommittee> _committeeslist = [];
-    private List<Examinee> _examineeslist = [];
-    private List<ProjectDocumentation> _projectDocumentationList = [];
-    private List<ProjectPresentation> _projectPresentationList = [];
-    private List<TechConversation> _projectTechConversationList = [];
-    private List<SupplementaryExamination> _supplementaryExaminationList = [];
 
     public EvalProService()
     {
@@ -24,32 +17,32 @@ public class EvalProService : IServiceApi
     
     public List<AuditCommittee> GetCommitteesList()
     {
-        return _committeeslist;
+        return _data.GetCommitteesList();
     }
 
     public List<Examinee> GetExamineesList()
     {
-        return _examineeslist;
+        return _data.GetExamineesList();
     }
 
     public List<ProjectDocumentation> GetProjectDocumentationList()
     {
-        return _projectDocumentationList;
+        return _data.GetProjectDocumentationList();
     }
 
     public List<ProjectPresentation> GetProjectPresentationList()
     {
-        return _projectPresentationList;
+        return _data.GetProjectPresentationList();
     }
 
     public List<TechConversation> GetProjectTechConversationList()
     {
-        return _projectTechConversationList;
+        return _data.GetProjectTechConversationList();
     }
 
     public List<SupplementaryExamination> GetSupplementaryExaminationList()
     {
-        return _supplementaryExaminationList;
+        return _data.GetSupplementaryExaminationList();
     }
     
 }
