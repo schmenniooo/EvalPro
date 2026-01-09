@@ -15,12 +15,12 @@ public class ServiceData
     
     public void SaveConfigToJson()
     {
-        
+        throw new NotImplementedException();
     }
     
     public void LoadConfigFromJson()
     {
-        
+        throw new NotImplementedException();
     }
     
     public List<AuditCommittee> GetCommitteesList()
