@@ -24,4 +24,30 @@ public class EvalProService : IServiceApi
     {
         throw new NotImplementedException();
     }
+    
+    public List<AuditCommittee> GetCommitteesList()
+    {
+        return _committeeslist;
+    }
+
+    public List<ProjectDocumentation> GetProjectDocumentationList()
+    {
+        return _projectDocumentationList;
+    }
+
+    public List<ProjectPresentation> GetProjectPresentationList()
+    {
+        return _projectPresentationList;
+    }
+
+    public List<TechConversation> GetProjectTechConversationList()
+    {
+        return _projectTechConversationList;
+    }
+
+    public List<SupplementaryExamination> GetSupplementaryExaminationList()
+    {
+        return _supplementaryExaminationList;
+    }
+    
 }
