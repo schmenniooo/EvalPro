@@ -1,6 +1,6 @@
 namespace EvalProService.db;
 
-public class ServiceDataController
+public class ServiceData
 {
     private readonly string _configFilePath = "config.json";
     

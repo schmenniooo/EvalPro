@@ -7,16 +7,19 @@ namespace EvalProService.impl;
 
 public class EvalProService : IServiceApi
 {
+    private readonly ServiceData _data;
+    
     private List<AuditCommittee> _committeeslist = [];
     private List<Examinee> _examineeslist = [];
-    private List<ProjectDocumentation>  _projectDocumentationList = [];
-    private List<ProjectPresentation>  _projectPresentationList = [];
-    private List<TechConversation>  _projectTechConversationList = [];
-    private List<SupplementaryExamination>  _supplementaryExaminationList = [];
+    private List<ProjectDocumentation> _projectDocumentationList = [];
+    private List<ProjectPresentation> _projectPresentationList = [];
+    private List<TechConversation> _projectTechConversationList = [];
+    private List<SupplementaryExamination> _supplementaryExaminationList = [];
 
     public EvalProService()
     {
-        new AutoDataSaver().StartAutoSaveTimer();
+        _data = new ServiceData();
+        new AutoDataSaver(_data).StartAutoSaveTimer();
     }
     
     public List<AuditCommittee> GetCommitteesList()

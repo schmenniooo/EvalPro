@@ -2,11 +2,11 @@ namespace EvalProService.db.autoSaver;
 
 public class AutoDataSaver
 {
-    private readonly ServiceDataController _dataController;
+    private readonly ServiceData _data;
 
-    public AutoDataSaver()
+    public AutoDataSaver(ServiceData data)
     {
-        _dataController = new ServiceDataController();
+        _data = data;
     }
 
     public void StartAutoSaveTimer()
