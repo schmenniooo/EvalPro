@@ -1,5 +1,6 @@
 using EvalProService.api;
 using EvalProService.db;
+using EvalProService.db.autoSaver;
 using EvalProService.impl.model;
 
 namespace EvalProService.impl;
@@ -15,7 +16,7 @@ public class EvalProService : IServiceApi
 
     public EvalProService()
     {
-        
+        new AutoDataSaver().StartAutoSaveTimer();
     }
     
     public List<AuditCommittee> GetCommitteesList()

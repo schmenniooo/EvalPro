@@ -9,7 +9,7 @@ public class AutoDataSaver
         _dataController = new ServiceDataController();
     }
 
-    private void StartAutoSaveTimer()
+    public void StartAutoSaveTimer()
     {
         // TODO: Init timer to call save methods every 500 ms
     }
