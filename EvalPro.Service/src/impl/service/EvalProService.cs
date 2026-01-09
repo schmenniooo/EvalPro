@@ -6,8 +6,6 @@ namespace EvalProService.impl;
 
 public class EvalProService : IServiceApi
 {
-    private readonly ServiceDataController _dataController;
-    
     private List<Examinee> _examineeslist = [];
     private List<AuditCommittee> _committeeslist = [];
     private List<ProjectDocumentation>  _projectDocumentationList = [];
@@ -17,7 +15,7 @@ public class EvalProService : IServiceApi
 
     public EvalProService()
     {
-        _dataController = new ServiceDataController();
+        
     }
     
     public List<AuditCommittee> GetCommitteesList()
