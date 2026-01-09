@@ -14,6 +14,7 @@ public class ServiceData
     private List<TechConversation> _projectTechConversationList = [];
     private List<SupplementaryExamination> _supplementaryExaminationList = [];
     
+    // Writes current attribute values into local json files
     public void SaveConfigToJson()
     {
         var data = new
@@ -35,6 +36,7 @@ public class ServiceData
         File.WriteAllText(_configFilePath, jsonString);
     }
 
+    // Reads values from json files
     public void LoadConfigFromJson()
     {
         if (!File.Exists(_configFilePath))
