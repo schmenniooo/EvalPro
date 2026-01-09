@@ -5,6 +5,8 @@ namespace EvalProService.api;
 public interface IServiceApi
 {
     List<AuditCommittee> GetCommitteesList();
+    
+    List<Examinee> GetExamineesList();
 
     List<ProjectDocumentation> GetProjectDocumentationList();
 
