@@ -1,6 +1,6 @@
 namespace EvalProService.impl.model;
 
-public class SupplimentaryExamination
+public class SupplementaryExamination
 {
     
 }
