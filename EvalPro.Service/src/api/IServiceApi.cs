@@ -2,8 +2,5 @@
 
 public interface IServiceApi
 {
-    void SaveConfig();
-    
-    void LoadConfig();
     
 }

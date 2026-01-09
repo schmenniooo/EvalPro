@@ -6,7 +6,7 @@ namespace EvalProService.impl;
 
 public class EvalProService : IServiceApi
 {
-    private readonly ServiceDataController _dataController = new();
+    private readonly ServiceDataController _dataController;
     
     private List<Examinee> _examineeslist = [];
     private List<AuditCommittee> _committeeslist = [];
@@ -14,15 +14,10 @@ public class EvalProService : IServiceApi
     private List<ProjectPresentation>  _projectPresentationList = [];
     private List<TechConversation>  _projectTechConversationList = [];
     private List<SupplementaryExamination>  _supplementaryExaminationList = [];
-    
-    public void SaveConfig()
-    {
-        throw new NotImplementedException();
-    }
 
-    public void LoadConfig()
+    public EvalProService()
     {
-        throw new NotImplementedException();
+        _dataController = new ServiceDataController();
     }
     
     public List<AuditCommittee> GetCommitteesList()
