@@ -6,8 +6,8 @@ namespace EvalProService.impl;
 
 public class EvalProService : IServiceApi
 {
-    private List<Examinee> _examineeslist = [];
     private List<AuditCommittee> _committeeslist = [];
+    private List<Examinee> _examineeslist = [];
     private List<ProjectDocumentation>  _projectDocumentationList = [];
     private List<ProjectPresentation>  _projectPresentationList = [];
     private List<TechConversation>  _projectTechConversationList = [];
@@ -21,6 +21,11 @@ public class EvalProService : IServiceApi
     public List<AuditCommittee> GetCommitteesList()
     {
         return _committeeslist;
+    }
+
+    public List<Examinee> GetExamineesList()
+    {
+        return _examineeslist;
     }
 
     public List<ProjectDocumentation> GetProjectDocumentationList()
