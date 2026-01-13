@@ -1,5 +1,6 @@
 using EvalProService.impl.model;
 using System.Text.Json;
+using EvalProService.impl.model.entities;
 
 namespace EvalProService.db;
 

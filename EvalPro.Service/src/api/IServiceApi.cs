@@ -1,4 +1,5 @@
 ﻿using EvalProService.impl.model;
+using EvalProService.impl.model.entities;
 
 namespace EvalProService.api;
 

@@ -2,6 +2,7 @@ using EvalProService.api;
 using EvalProService.db;
 using EvalProService.db.autoSaver;
 using EvalProService.impl.model;
+using EvalProService.impl.model.entities;
 
 namespace EvalProService.impl;
 
