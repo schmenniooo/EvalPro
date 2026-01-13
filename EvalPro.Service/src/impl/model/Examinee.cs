@@ -18,8 +18,16 @@ public class Examinee
     
     public SupplementaryExamination SupplementaryExamination { get; set; }
 
-    public Examinee(string name, string company, string contactPerson, string projectTitle, ProjectDocumentation projectDocumentation, ProjectPresentation projectPresentation, TechConversation techConversation,  SupplementaryExamination supplementaryExamination)
-    {
+    public Examinee(
+        string name, 
+        string company, 
+        string contactPerson, 
+        string projectTitle, 
+        ProjectDocumentation projectDocumentation, 
+        ProjectPresentation projectPresentation, 
+        TechConversation techConversation,  
+        SupplementaryExamination supplementaryExamination
+    ) {
         Name = name;
         Company = company;
         ContactPerson = contactPerson;
