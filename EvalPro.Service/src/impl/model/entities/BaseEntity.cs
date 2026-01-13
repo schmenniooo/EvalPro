@@ -1,17 +1,10 @@
-namespace EvalProService.impl.model;
+namespace EvalProService.impl.model.entities;
 
 public class BaseEntity
 {
-    public string ID { get; set; }
-    
-    public DateTime CreatedAt { get; set; }
-    
-    public DateTime UpdatedAt { get; set; }
+    public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    public BaseEntity()
-    {
-        ID = Guid.NewGuid().ToString();
-        CreatedAt = DateTime.Now;
-        UpdatedAt = DateTime.Now;
-    }
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 }

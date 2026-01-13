@@ -1,4 +1,4 @@
-namespace EvalProService.impl.model;
+namespace EvalProService.impl.model.entities;
 
 public class AuditCommittee
 {

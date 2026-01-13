@@ -1,6 +1,6 @@
-namespace EvalProService.impl.model;
+namespace EvalProService.impl.model.entities;
 
-public class Examinee
+public class Examinee : BaseEntity
 {
     public string Name { get; set; }
     
