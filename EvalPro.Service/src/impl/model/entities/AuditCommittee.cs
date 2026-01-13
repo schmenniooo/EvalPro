@@ -15,5 +15,7 @@ public class AuditCommittee
         Designation = designation;
         ApprenticeShip = apprenticeShip;
         TestDates = testDates;
+        
+        // Examinee = new Examinee()
     }
 }
