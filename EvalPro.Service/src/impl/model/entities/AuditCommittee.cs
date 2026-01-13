@@ -1,6 +1,6 @@
 namespace EvalProService.impl.model.entities;
 
-public class AuditCommittee
+public class AuditCommittee : BaseEntity
 {
     public string Designation { get; set; }
     
