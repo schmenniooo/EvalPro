@@ -9,8 +9,8 @@ public class ServiceData
     private readonly Lock _lock = new();
     private const string ConfigFilePath = "config.json";
     
-    private List<AuditCommittee> _committeeslist = [];
-    private List<Examinee> _examineeslist = [];
+    private List<AuditCommittee> _committeesList = [];
+    private List<Examinee> _examineesList = [];
     private List<ProjectDocumentation> _projectDocumentationList = [];
     private List<ProjectPresentation> _projectPresentationList = [];
     private List<TechConversation> _projectTechConversationList = [];
@@ -78,8 +78,8 @@ public class ServiceData
         // Lock only for the assignment (fast)
         lock (_lock)
         {
-            if (committees != null) _committeeslist = committees;
-            if (examinees != null) _examineeslist = examinees;
+            if (committees != null) _committeesList = committees;
+            if (examinees != null) _examineesList = examinees;
             if (projectDocs != null) _projectDocumentationList = projectDocs;
             if (projectPres != null) _projectPresentationList = projectPres;
             if (techConv != null) _projectTechConversationList = techConv;
@@ -97,8 +97,8 @@ public class ServiceData
                 return new
                 {
                     // Creating copies from current values
-                    Committees = _committeeslist.ToList(),
-                    Examinees = _examineeslist.ToList(),
+                    Committees = _committeesList.ToList(),
+                    Examinees = _examineesList.ToList(),
                     ProjectDocumentation = _projectDocumentationList.ToList(),
                     ProjectPresentation = _projectPresentationList.ToList(),
                     TechConversation = _projectTechConversationList.ToList(),
@@ -109,12 +109,12 @@ public class ServiceData
     
     public List<AuditCommittee> GetCommitteesList()
     {
-        return _committeeslist;
+        return _committeesList;
     }
 
     public List<Examinee> GetExamineesList()
     {
-        return _examineeslist;
+        return _examineesList;
     }
 
     public List<ProjectDocumentation> GetProjectDocumentationList()
