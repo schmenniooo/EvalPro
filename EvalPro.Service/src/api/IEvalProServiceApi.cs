@@ -4,7 +4,7 @@ using EvalProService.impl.model.ratings;
 
 namespace EvalProService.api;
 
-public interface IServiceApi
+public interface IEvalProServiceApi
 {
     List<AuditCommittee> GetCommitteesList();
     

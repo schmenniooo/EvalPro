@@ -7,11 +7,11 @@ using EvalProService.impl.persistency.autoSaver;
 
 namespace EvalProService.impl.service;
 
-public class EvalProService : IServiceApi
+public class EvalProEvalProService : IEvalProServiceApi
 {
     private readonly ServiceData _data;
 
-    public EvalProService()
+    public EvalProEvalProService()
     {
         _data = new ServiceData();
         new AutoDataSaver(_data).StartAutoSaveTimer();
