@@ -45,5 +45,15 @@ public class EvalProService : IServiceApi
     {
         return _data.SupplementaryExaminationList;
     }
+
+    public void AddCommittee()
+    {
+        
+    }
+
+    public void AddExaminee()
+    {
+        
+    }
     
 }
