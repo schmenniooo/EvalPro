@@ -46,16 +46,18 @@ public class EvalProService : IServiceApi
         return _data.SupplementaryExaminationList;
     }
 
-    public void AddCommittee(string designation, string apprenticeShip, List<DateTime> testDates)
+    public AuditCommittee AddCommittee(string designation, string apprenticeShip, List<DateTime> testDates)
     {
         var committee = new AuditCommittee(designation, apprenticeShip, testDates);
         _data.CommitteesList.Add(committee);
+        return committee;
     }
 
-    public void AddExaminee(string name, string company, string contactPerson, string projectTitle)
+    public Examinee AddExaminee(string name, string company, string contactPerson, string projectTitle)
     {
         var examinee = new Examinee(name, company, contactPerson, projectTitle);
         _data.ExamineesList.Add(examinee);
+        return examinee;
     }
     
 }
