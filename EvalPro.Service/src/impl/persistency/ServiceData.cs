@@ -4,8 +4,15 @@ using EvalProService.impl.model.ratings;
 
 namespace EvalProService.impl.persistency;
 
+/// <summary>
+/// Data class that stores the data and handles persistency.
+/// </summary>
 public class ServiceData
 {
+    /// <summary>
+    /// Key to work on this thread with the data.
+    /// Used to handle Thread-Safety.
+    /// </summary>
     private readonly Lock _lock = new();
     private const string ConfigFilePath = "config.json";
     
@@ -129,6 +136,10 @@ public class ServiceData
 
     // ----- Committee Operations -----
 
+    /// <summary>
+    /// Adds a committee object to the list
+    /// </summary>
+    /// <param name="committee"></param>
     public void AddCommittee(AuditCommittee committee)
     {
         lock (_lock)
@@ -139,6 +150,12 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    /// Updates a committee by id with given call backs
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="updateAction"></param>
+    /// <returns></returns>
     public bool UpdateCommittee(string id, Action<AuditCommittee> updateAction)
     {
         lock (_lock)
@@ -152,17 +169,25 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    /// Searches for committee object with given id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public bool RemoveCommittee(string id)
     {
         lock (_lock)
         {
             var committee = CommitteesList.FirstOrDefault(c => c.Id == id);
-            if (committee == null) return false;
-
-            return CommitteesList.Remove(committee);
+            return committee != null && CommitteesList.Remove(committee);
         }
     }
 
+    /// <summary>
+    /// Searches for a committee object with given id and returns it
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public AuditCommittee? GetCommitteeById(string id)
     {
         lock (_lock)
@@ -171,6 +196,10 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    ///  Returns the list of committee's as readonly to manage access on it
+    /// </summary>
+    /// <returns></returns>
     public IReadOnlyList<AuditCommittee> GetAllCommittees()
     {
         lock (_lock)

@@ -23,6 +23,13 @@ public class EvalProService : IEvalProServiceApi
 
     // ===== Committee Operations =====
     
+    /// <summary>
+    /// Creates a new committee object with given parameters
+    /// </summary>
+    /// <param name="designation"></param>
+    /// <param name="apprenticeShip"></param>
+    /// <param name="testDates"></param>
+    /// <returns></returns>
     public AuditCommittee AddCommittee(string designation, string apprenticeShip, List<DateTime> testDates)
     {
         var committee = new AuditCommittee(designation, apprenticeShip, testDates);
@@ -30,6 +37,14 @@ public class EvalProService : IEvalProServiceApi
         return committee;
     }
 
+    /// <summary>
+    /// Updates a committee object by id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="designation"></param>
+    /// <param name="apprenticeShip"></param>
+    /// <param name="testDates"></param>
+    /// <returns></returns>
     public bool UpdateCommittee(string id, string? designation = "", string? apprenticeShip = "", List<DateTime>? testDates = null)
     {
         return _data.UpdateCommittee(id, committee =>
@@ -40,16 +55,30 @@ public class EvalProService : IEvalProServiceApi
         });
     }
 
+    /// <summary>
+    /// Deletes a committee object
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public bool RemoveCommittee(string id)
     {
         return _data.RemoveCommittee(id);
     }
 
+    /// <summary>
+    /// Returns a committee object found with given id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public AuditCommittee? GetCommitteeById(string id)
     {
         return _data.GetCommitteeById(id);
     }
 
+    /// <summary>
+    /// Returns a readonly list of committee's to avoid unmanaged access on it
+    /// </summary>
+    /// <returns></returns>
     public IReadOnlyList<AuditCommittee> GetAllCommittees()
     {
         return _data.GetAllCommittees();
