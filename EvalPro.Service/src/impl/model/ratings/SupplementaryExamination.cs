@@ -12,6 +12,6 @@ public class SupplementaryExamination
     public SupplementaryExamination(string chosenTestArea, int points)
     {
         ChosenTestArea = chosenTestArea;
-        points = points;
+        this.points = points;
     }
 }
