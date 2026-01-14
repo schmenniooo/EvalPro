@@ -380,8 +380,8 @@ public class ServiceData
     {
         lock (_lock)
         {
-            //exam.ModifiedAt = DateTime.Now;
-            //exam.ModifiedAt = DateTime.Now;
+            exam.CreatedAt = DateTime.Now;
+            exam.UpdatedAt = DateTime.Now;
             SupplementaryExaminationList.Add(exam);
         }
     }
@@ -395,7 +395,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            //return SupplementaryExaminationList.FirstOrDefault(s => s.Id == id);
+            return SupplementaryExaminationList.FirstOrDefault(s => s.Id == id);
         }
 
         return null;

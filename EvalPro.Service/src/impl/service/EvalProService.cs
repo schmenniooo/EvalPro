@@ -314,7 +314,7 @@ public class EvalProService : IEvalProServiceApi
 
         return _data.UpdateExaminee(examineeId, examinee =>
         {
-            //examinee.SupplementaryExaminationId = exam.Id;
+            examinee.SupplementaryExaminationId = exam.Id;
         });
     }
 
