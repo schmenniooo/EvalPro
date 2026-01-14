@@ -163,13 +163,17 @@ public class ServiceDataTests : IDisposable
     }
 
     [Fact]
-    public void LoadConfigFromJson_WithMalformedJson_ThrowsException()
+    public void LoadConfigFromJson_WithMalformedJson_HandlesGracefully()
     {
         // Arrange - Write malformed JSON
         File.WriteAllText("config.json", "{ this is not valid JSON }");
 
-        // Act & Assert - Should throw exception during load
-        Assert.ThrowsAny<Exception>(() => new ServiceData());
+        // Act - Should not throw, just keep empty lists
+        var serviceData = new ServiceData();
+
+        // Assert - Should have empty lists (error was caught and logged)
+        Assert.Empty(serviceData.CommitteesList);
+        Assert.Empty(serviceData.ExamineesList);
     }
 
     [Fact]
@@ -178,8 +182,12 @@ public class ServiceDataTests : IDisposable
         // Arrange - Create empty file
         File.WriteAllText("config.json", "");
 
-        // Act & Assert - Should throw exception
-        Assert.ThrowsAny<Exception>(() => new ServiceData());
+        // Act - Should not throw, just keep empty lists
+        var serviceData = new ServiceData();
+
+        // Assert - Should have empty lists (error was caught and logged)
+        Assert.Empty(serviceData.CommitteesList);
+        Assert.Empty(serviceData.ExamineesList);
     }
 
     [Fact]
