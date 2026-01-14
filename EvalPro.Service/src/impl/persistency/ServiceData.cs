@@ -16,12 +16,12 @@ public class ServiceData
     private readonly Lock _lock = new();
     private const string ConfigFilePath = "config.json";
     
-    public List<AuditCommittee> CommitteesList = [];
-    public List<Examinee> ExamineesList = [];
-    public List<ProjectDocumentation> ProjectDocumentationList = [];
-    public List<ProjectPresentation> ProjectPresentationList = [];
-    public List<TechConversation> ProjectTechConversationList = [];
-    public List<SupplementaryExamination> SupplementaryExaminationList = [];
+    private List<AuditCommittee> _committeesList = [];
+    private List<Examinee> _examineesList = [];
+    private List<ProjectDocumentation> _projectDocumentationList = [];
+    private List<ProjectPresentation> _projectPresentationList = [];
+    private List<TechConversation> _projectTechConversationList = [];
+    private List<SupplementaryExamination> _supplementaryExaminationList = [];
 
     public ServiceData()
     {
@@ -94,12 +94,12 @@ public class ServiceData
             // Lock only for the assignment (fast)
             lock (_lock)
             {
-                if (committees != null) CommitteesList = committees;
-                if (examinees != null) ExamineesList = examinees;
-                if (projectDocs != null) ProjectDocumentationList = projectDocs;
-                if (projectPres != null) ProjectPresentationList = projectPres;
-                if (techConv != null) ProjectTechConversationList = techConv;
-                if (suppExam != null) SupplementaryExaminationList = suppExam;
+                if (committees != null) _committeesList = committees;
+                if (examinees != null) _examineesList = examinees;
+                if (projectDocs != null) _projectDocumentationList = projectDocs;
+                if (projectPres != null) _projectPresentationList = projectPres;
+                if (techConv != null) _projectTechConversationList = techConv;
+                if (suppExam != null) _supplementaryExaminationList = suppExam;
             }
         }
         catch (JsonException)
@@ -123,12 +123,12 @@ public class ServiceData
             return new
             {
                 // Creating copies from current values
-                Committees = CommitteesList.ToList(),
-                Examinees = ExamineesList.ToList(),
-                ProjectDocumentation = ProjectDocumentationList.ToList(),
-                ProjectPresentation = ProjectPresentationList.ToList(),
-                TechConversation = ProjectTechConversationList.ToList(),
-                SupplementaryExamination = SupplementaryExaminationList.ToList()
+                Committees = _committeesList.ToList(),
+                Examinees = _examineesList.ToList(),
+                ProjectDocumentation = _projectDocumentationList.ToList(),
+                ProjectPresentation = _projectPresentationList.ToList(),
+                TechConversation = _projectTechConversationList.ToList(),
+                SupplementaryExamination = _supplementaryExaminationList.ToList()
             };
         }
     }
@@ -147,7 +147,7 @@ public class ServiceData
         {
             committee.CreatedAt = DateTime.Now;
             committee.UpdatedAt = DateTime.Now;
-            CommitteesList.Add(committee);
+            _committeesList.Add(committee);
         }
     }
 
@@ -161,7 +161,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            var committee = CommitteesList.FirstOrDefault(c => c.Id == id);
+            var committee = _committeesList.FirstOrDefault(c => c.Id == id);
             if (committee == null) return false;
 
             updateAction(committee);
@@ -179,8 +179,8 @@ public class ServiceData
     {
         lock (_lock)
         {
-            var committee = CommitteesList.FirstOrDefault(c => c.Id == id);
-            return committee != null && CommitteesList.Remove(committee);
+            var committee = _committeesList.FirstOrDefault(c => c.Id == id);
+            return committee != null && _committeesList.Remove(committee);
         }
     }
 
@@ -193,7 +193,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            return CommitteesList.FirstOrDefault(c => c.Id == id);
+            return _committeesList.FirstOrDefault(c => c.Id == id);
         }
     }
 
@@ -205,7 +205,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            return CommitteesList.ToList().AsReadOnly();
+            return _committeesList.ToList().AsReadOnly();
         }
     }
 
@@ -221,7 +221,7 @@ public class ServiceData
         {
             examinee.CreatedAt = DateTime.Now;
             examinee.UpdatedAt = DateTime.Now;
-            ExamineesList.Add(examinee);
+            _examineesList.Add(examinee);
         }
     }
 
@@ -235,7 +235,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            var examinee = ExamineesList.FirstOrDefault(e => e.Id == id);
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == id);
             if (examinee == null) return false;
 
             updateAction(examinee);
@@ -253,8 +253,8 @@ public class ServiceData
     {
         lock (_lock)
         {
-            var examinee = ExamineesList.FirstOrDefault(e => e.Id == id);
-            return examinee != null && ExamineesList.Remove(examinee);
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == id);
+            return examinee != null && _examineesList.Remove(examinee);
         }
     }
 
@@ -267,7 +267,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            return ExamineesList.FirstOrDefault(e => e.Id == id);
+            return _examineesList.FirstOrDefault(e => e.Id == id);
         }
     }
 
@@ -279,7 +279,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            return ExamineesList.ToList().AsReadOnly();
+            return _examineesList.ToList().AsReadOnly();
         }
     }
 
@@ -295,7 +295,7 @@ public class ServiceData
         {
             doc.CreatedAt = DateTime.Now;
             doc.ModifiedAt = DateTime.Now;
-            ProjectDocumentationList.Add(doc);
+            _projectDocumentationList.Add(doc);
         }
     }
 
@@ -308,7 +308,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            return ProjectDocumentationList.FirstOrDefault(d => d.Id == id);
+            return _projectDocumentationList.FirstOrDefault(d => d.Id == id);
         }
     }
 
@@ -324,7 +324,7 @@ public class ServiceData
         {
             presentation.CreatedAt = DateTime.Now;
             presentation.ModifiedAt = DateTime.Now;
-            ProjectPresentationList.Add(presentation);
+            _projectPresentationList.Add(presentation);
         }
     }
 
@@ -337,7 +337,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            return ProjectPresentationList.FirstOrDefault(p => p.Id == id);
+            return _projectPresentationList.FirstOrDefault(p => p.Id == id);
         }
     }
 
@@ -353,7 +353,7 @@ public class ServiceData
         {
             conversation.CreatedAt = DateTime.Now;
             conversation.ModifiedAt = DateTime.Now;
-            ProjectTechConversationList.Add(conversation);
+            _projectTechConversationList.Add(conversation);
         }
     }
 
@@ -366,7 +366,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            return ProjectTechConversationList.FirstOrDefault(t => t.Id == id);
+            return _projectTechConversationList.FirstOrDefault(t => t.Id == id);
         }
     }
 
@@ -382,7 +382,7 @@ public class ServiceData
         {
             exam.CreatedAt = DateTime.Now;
             exam.UpdatedAt = DateTime.Now;
-            SupplementaryExaminationList.Add(exam);
+            _supplementaryExaminationList.Add(exam);
         }
     }
 
@@ -395,9 +395,7 @@ public class ServiceData
     {
         lock (_lock)
         {
-            return SupplementaryExaminationList.FirstOrDefault(s => s.Id == id);
+            return _supplementaryExaminationList.FirstOrDefault(s => s.Id == id);
         }
-
-        return null;
     }
 }

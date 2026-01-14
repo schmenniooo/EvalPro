@@ -23,13 +23,11 @@ public class ServiceDataTests : IDisposable
     [Fact]
     public void Constructor_InitializesAllLists()
     {
-        // Assert - Check that all lists are initialized and not null
-        Assert.NotNull(_serviceData.CommitteesList);
-        Assert.NotNull(_serviceData.ExamineesList);
-        Assert.NotNull(_serviceData.ProjectDocumentationList);
-        Assert.NotNull(_serviceData.ProjectPresentationList);
-        Assert.NotNull(_serviceData.ProjectTechConversationList);
-        Assert.NotNull(_serviceData.SupplementaryExaminationList);
+        // Assert - Check that all lists are initialized and accessible (should return empty lists, not null)
+        Assert.NotNull(_serviceData.GetAllCommittees());
+        Assert.NotNull(_serviceData.GetAllExaminees());
+        Assert.Empty(_serviceData.GetAllCommittees());
+        Assert.Empty(_serviceData.GetAllExaminees());
     }
 
     [Fact]
@@ -41,7 +39,7 @@ public class ServiceDataTests : IDisposable
             apprenticeShip: "Software Development",
             testDates: new List<DateTime> { FixedTestDate }
         );
-        _serviceData.CommitteesList.Add(testCommittee);
+        _serviceData.AddCommittee(testCommittee);
 
         // Act - Save to JSON
         _serviceData.SaveConfigToJson();
@@ -66,12 +64,8 @@ public class ServiceDataTests : IDisposable
 
         // Load and verify empty lists are preserved
         var newServiceData = new ServiceData();
-        Assert.Empty(newServiceData.CommitteesList);
-        Assert.Empty(newServiceData.ExamineesList);
-        Assert.Empty(newServiceData.ProjectDocumentationList);
-        Assert.Empty(newServiceData.ProjectPresentationList);
-        Assert.Empty(newServiceData.ProjectTechConversationList);
-        Assert.Empty(newServiceData.SupplementaryExaminationList);
+        Assert.Empty(newServiceData.GetAllCommittees());
+        Assert.Empty(newServiceData.GetAllExaminees());
     }
 
     [Fact]
@@ -85,19 +79,20 @@ public class ServiceDataTests : IDisposable
             apprenticeShip: "Application Development",
             testDates: new List<DateTime> { testDate1, testDate2 }
         );
-        _serviceData.CommitteesList.Add(testCommittee);
+        _serviceData.AddCommittee(testCommittee);
 
         // Act - Save and create new instance to load
         _serviceData.SaveConfigToJson();
         var newServiceData = new ServiceData();
 
         // Assert - Check data was loaded correctly
-        Assert.Single(newServiceData.CommitteesList);
-        Assert.Equal("Backend Team", newServiceData.CommitteesList[0].Designation);
-        Assert.Equal("Application Development", newServiceData.CommitteesList[0].ApprenticeShip);
-        Assert.Equal(2, newServiceData.CommitteesList[0].TestDates.Count);
-        Assert.Contains(testDate1, newServiceData.CommitteesList[0].TestDates);
-        Assert.Contains(testDate2, newServiceData.CommitteesList[0].TestDates);
+        var committees = newServiceData.GetAllCommittees();
+        Assert.Single(committees);
+        Assert.Equal("Backend Team", committees[0].Designation);
+        Assert.Equal("Application Development", committees[0].ApprenticeShip);
+        Assert.Equal(2, committees[0].TestDates.Count);
+        Assert.Contains(testDate1, committees[0].TestDates);
+        Assert.Contains(testDate2, committees[0].TestDates);
     }
 
     [Fact]
@@ -108,19 +103,20 @@ public class ServiceDataTests : IDisposable
         var committee2 = new AuditCommittee("Team B", "Development", new List<DateTime> { FixedTestDate.AddDays(1) });
         var committee3 = new AuditCommittee("Team C", "Testing", new List<DateTime> { FixedTestDate.AddDays(2) });
 
-        _serviceData.CommitteesList.Add(committee1);
-        _serviceData.CommitteesList.Add(committee2);
-        _serviceData.CommitteesList.Add(committee3);
+        _serviceData.AddCommittee(committee1);
+        _serviceData.AddCommittee(committee2);
+        _serviceData.AddCommittee(committee3);
 
         // Act
         _serviceData.SaveConfigToJson();
         var newServiceData = new ServiceData();
 
         // Assert
-        Assert.Equal(3, newServiceData.CommitteesList.Count);
-        Assert.Equal("Team A", newServiceData.CommitteesList[0].Designation);
-        Assert.Equal("Team B", newServiceData.CommitteesList[1].Designation);
-        Assert.Equal("Team C", newServiceData.CommitteesList[2].Designation);
+        var committees = newServiceData.GetAllCommittees();
+        Assert.Equal(3, committees.Count);
+        Assert.Equal("Team A", committees[0].Designation);
+        Assert.Equal("Team B", committees[1].Designation);
+        Assert.Equal("Team C", committees[2].Designation);
     }
 
     [Fact]
@@ -128,7 +124,7 @@ public class ServiceDataTests : IDisposable
     {
         // Arrange - Add test data with fixed date
         var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.CommitteesList.Add(committee);
+        _serviceData.AddCommittee(committee);
 
         // Act - Call save multiple times concurrently
         var tasks = new List<Task>();
@@ -159,7 +155,7 @@ public class ServiceDataTests : IDisposable
 
         // Verify the saved data is still valid
         var loadedData = new ServiceData();
-        Assert.Single(loadedData.CommitteesList);
+        Assert.Single(loadedData.GetAllCommittees());
     }
 
     [Fact]
@@ -172,8 +168,8 @@ public class ServiceDataTests : IDisposable
         var serviceData = new ServiceData();
 
         // Assert - Should have empty lists (error was caught and logged)
-        Assert.Empty(serviceData.CommitteesList);
-        Assert.Empty(serviceData.ExamineesList);
+        Assert.Empty(serviceData.GetAllCommittees());
+        Assert.Empty(serviceData.GetAllExaminees());
     }
 
     [Fact]
@@ -186,8 +182,8 @@ public class ServiceDataTests : IDisposable
         var serviceData = new ServiceData();
 
         // Assert - Should have empty lists (error was caught and logged)
-        Assert.Empty(serviceData.CommitteesList);
-        Assert.Empty(serviceData.ExamineesList);
+        Assert.Empty(serviceData.GetAllCommittees());
+        Assert.Empty(serviceData.GetAllExaminees());
     }
 
     [Fact]
@@ -200,9 +196,8 @@ public class ServiceDataTests : IDisposable
         var serviceData = new ServiceData();
 
         // Assert - All lists should be empty
-        Assert.Empty(serviceData.CommitteesList);
-        Assert.Empty(serviceData.ExamineesList);
-        Assert.Empty(serviceData.ProjectDocumentationList);
+        Assert.Empty(serviceData.GetAllCommittees());
+        Assert.Empty(serviceData.GetAllExaminees());
     }
 
     [Fact]
@@ -210,7 +205,7 @@ public class ServiceDataTests : IDisposable
     {
         // Arrange
         var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.CommitteesList.Add(committee);
+        _serviceData.AddCommittee(committee);
 
         // Act
         _serviceData.SaveConfigToJson();

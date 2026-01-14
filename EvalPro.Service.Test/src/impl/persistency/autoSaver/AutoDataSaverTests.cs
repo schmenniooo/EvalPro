@@ -44,7 +44,7 @@ public class AutoDataSaverTests : IDisposable
             apprenticeShip: "Software Development",
             testDates: new List<DateTime> { FixedTestDate }
         );
-        _serviceData.CommitteesList.Add(committee);
+        _serviceData.AddCommittee(committee);
 
         // Delete file to ensure timer creates it
         if (File.Exists("config.json"))
@@ -61,8 +61,9 @@ public class AutoDataSaverTests : IDisposable
 
         // Verify content by loading
         var loadedData = new ServiceData();
-        Assert.Single(loadedData.CommitteesList);
-        Assert.Equal("Auto-saved Committee", loadedData.CommitteesList[0].Designation);
+        var committees = loadedData.GetAllCommittees();
+        Assert.Single(committees);
+        Assert.Equal("Auto-saved Committee", committees[0].Designation);
     }
 
     [Fact]
@@ -70,7 +71,7 @@ public class AutoDataSaverTests : IDisposable
     {
         // Arrange
         var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.CommitteesList.Add(committee);
+        _serviceData.AddCommittee(committee);
 
         // Act - Start timer multiple times
         _autoSaver.StartAutoSaveTimer();
@@ -82,7 +83,7 @@ public class AutoDataSaverTests : IDisposable
         // Assert - Should not crash, file should exist
         Assert.True(File.Exists("config.json"));
         var loadedData = new ServiceData();
-        Assert.Single(loadedData.CommitteesList);
+        Assert.Single(loadedData.GetAllCommittees());
     }
 
     [Fact]
@@ -94,7 +95,7 @@ public class AutoDataSaverTests : IDisposable
             apprenticeShip: "IT",
             testDates: new List<DateTime> { FixedTestDate }
         );
-        _serviceData.CommitteesList.Add(committee);
+        _serviceData.AddCommittee(committee);
 
         // Delete any existing file to ensure Dispose creates it
         if (File.Exists("config.json"))
@@ -109,8 +110,9 @@ public class AutoDataSaverTests : IDisposable
         Assert.True(File.Exists("config.json"));
 
         var loadedData = new ServiceData();
-        Assert.Single(loadedData.CommitteesList);
-        Assert.Equal("Final Committee", loadedData.CommitteesList[0].Designation);
+        var committees = loadedData.GetAllCommittees();
+        Assert.Single(committees);
+        Assert.Equal("Final Committee", committees[0].Designation);
     }
 
     [Fact]
@@ -122,7 +124,7 @@ public class AutoDataSaverTests : IDisposable
             apprenticeShip: "Development",
             testDates: new List<DateTime> { FixedTestDate }
         );
-        _serviceData.CommitteesList.Add(committee);
+        _serviceData.AddCommittee(committee);
 
         // Act - Start timer and wait for first save
         _autoSaver.StartAutoSaveTimer();
@@ -130,7 +132,7 @@ public class AutoDataSaverTests : IDisposable
 
         // Verify first save
         var firstLoad = new ServiceData();
-        Assert.Single(firstLoad.CommitteesList);
+        Assert.Single(firstLoad.GetAllCommittees());
 
         // Add more data
         var committee2 = new AuditCommittee(
@@ -138,14 +140,15 @@ public class AutoDataSaverTests : IDisposable
             apprenticeShip: "Testing",
             testDates: new List<DateTime> { FixedTestDate.AddDays(1) }
         );
-        _serviceData.CommitteesList.Add(committee2);
+        _serviceData.AddCommittee(committee2);
         Thread.Sleep(SafeWaitTime); // Wait for second save
 
         // Assert - Both committees should be saved
         var loadedData = new ServiceData();
-        Assert.Equal(2, loadedData.CommitteesList.Count);
-        Assert.Equal("Initial Committee", loadedData.CommitteesList[0].Designation);
-        Assert.Equal("Second Committee", loadedData.CommitteesList[1].Designation);
+        var committees = loadedData.GetAllCommittees();
+        Assert.Equal(2, committees.Count);
+        Assert.Equal("Initial Committee", committees[0].Designation);
+        Assert.Equal("Second Committee", committees[1].Designation);
     }
 
     [Fact]
@@ -153,7 +156,7 @@ public class AutoDataSaverTests : IDisposable
     {
         // Arrange
         var committee = new AuditCommittee("Initial", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.CommitteesList.Add(committee);
+        _serviceData.AddCommittee(committee);
 
         // Act - Start timer
         _autoSaver.StartAutoSaveTimer();
@@ -167,7 +170,7 @@ public class AutoDataSaverTests : IDisposable
                 apprenticeShip: "IT",
                 testDates: new List<DateTime> { FixedTestDate.AddDays(i) }
             );
-            _serviceData.CommitteesList.Add(newCommittee);
+            _serviceData.AddCommittee(newCommittee);
             Thread.Sleep(250); // Add items faster than timer interval
         }
 
@@ -175,7 +178,7 @@ public class AutoDataSaverTests : IDisposable
 
         // Assert - All items should be saved
         var loadedData = new ServiceData();
-        Assert.Equal(4, loadedData.CommitteesList.Count); // 1 initial + 3 added
+        Assert.Equal(4, loadedData.GetAllCommittees().Count); // 1 initial + 3 added
     }
 
     [Fact]
@@ -183,7 +186,7 @@ public class AutoDataSaverTests : IDisposable
     {
         // Arrange
         var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.CommitteesList.Add(committee);
+        _serviceData.AddCommittee(committee);
 
         _autoSaver.StartAutoSaveTimer();
         Thread.Sleep(SafeWaitTime); // Let it save once
@@ -212,7 +215,7 @@ public class AutoDataSaverTests : IDisposable
 
         // Arrange
         var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.CommitteesList.Add(committee);
+        _serviceData.AddCommittee(committee);
 
         // Act - Start timer
         _autoSaver.StartAutoSaveTimer();
@@ -225,7 +228,7 @@ public class AutoDataSaverTests : IDisposable
 
         // Verify data is still being saved
         var loadedData = new ServiceData();
-        Assert.Single(loadedData.CommitteesList);
+        Assert.Single(loadedData.GetAllCommittees());
     }
 
     [Fact]
@@ -245,8 +248,8 @@ public class AutoDataSaverTests : IDisposable
         Assert.True(File.Exists("config.json"));
 
         var loadedData = new ServiceData();
-        Assert.Empty(loadedData.CommitteesList);
-        Assert.Empty(loadedData.ExamineesList);
+        Assert.Empty(loadedData.GetAllCommittees());
+        Assert.Empty(loadedData.GetAllExaminees());
     }
 
     public void Dispose()
