@@ -1,6 +1,4 @@
-using EvalProService.impl.model.rating;
-
-namespace EvalProService.impl.model;
+namespace EvalProService.impl.model.ratings;
 
 public class ProjectDocumentation : BaseRating
 {

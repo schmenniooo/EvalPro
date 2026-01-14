@@ -1,4 +1,4 @@
-namespace EvalProService.impl.model.rating;
+namespace EvalProService.impl.model.ratings;
 
 public class BaseRating
 {

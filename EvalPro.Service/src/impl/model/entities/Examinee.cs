@@ -1,3 +1,5 @@
+using EvalProService.impl.model.ratings;
+
 namespace EvalProService.impl.model.entities;
 
 public class Examinee : BaseEntity

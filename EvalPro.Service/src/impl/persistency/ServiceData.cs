@@ -1,6 +1,7 @@
 using System.Text.Json;
 using EvalProService.impl.model;
 using EvalProService.impl.model.entities;
+using EvalProService.impl.model.ratings;
 
 namespace EvalProService.impl.persistency;
 
