@@ -22,20 +22,32 @@ public class Examinee : BaseEntity
         string name, 
         string company, 
         string contactPerson, 
-        string projectTitle, 
-        ProjectDocumentation projectDocumentation, 
-        ProjectPresentation projectPresentation, 
-        TechConversation techConversation,  
-        SupplementaryExamination supplementaryExamination
+        string projectTitle
     ) {
         Name = name;
         Company = company;
         ContactPerson = contactPerson;
         ProjectTitle = projectTitle;
-        
-        ProjectDocumentation = projectDocumentation;
-        ProjectPresentation = projectPresentation;
+    }
+    
+    public void SetProjectDocumentation(ProjectDocumentation documentation)
+    {
+        ProjectDocumentation = documentation;
+    }
+
+    public void SetProjectPresentation(ProjectPresentation presentation)
+    {
+        ProjectPresentation = presentation;
+    }
+
+    public void SetTechConversation(TechConversation techConversation)
+    {
         TechConversation = techConversation;
+    }
+
+    public void SetSupplementaryExamination(SupplementaryExamination supplementaryExamination)
+    {
         SupplementaryExamination = supplementaryExamination;
     }
+    
 }
