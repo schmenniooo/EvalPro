@@ -21,9 +21,9 @@ public class ServiceData
         LoadConfigFromJson();
     }
 
-    /**
-     * Writes current attribute values into local json files
-     */
+    /// <summary>
+    /// Writes current attribute values into local json files
+    /// </summary>
     public void SaveConfigToJson()
     {
         // Capture snapshot while locked (fast)
@@ -39,9 +39,9 @@ public class ServiceData
         File.WriteAllText(ConfigFilePath, jsonString);
     }
     
-    /**
-     * Reads values from json files
-     */
+    /// <summary>
+    /// Reads values from json files
+    /// </summary>
     private void LoadConfigFromJson()
     {
         if (!File.Exists(ConfigFilePath))
@@ -105,9 +105,10 @@ public class ServiceData
         }
     }
     
-    /**
-     * Creates a copy of the current stored data for thread locking
-     */
+    /// <summary>
+    /// Creates a copy of the current stored data for thread locking
+    /// </summary>
+    /// <returns></returns>
     private object CreateSnapshot()
         {
             lock (_lock)

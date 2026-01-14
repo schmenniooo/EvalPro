@@ -14,7 +14,9 @@ public class AutoDataSaver : IDisposable
         _data = data;
     }
 
-    // Creates a new timer instance for 500ms
+    /// <summary>
+    /// Creates a new timer instance for 500ms
+    /// </summary>
     public void StartAutoSaveTimer()
     {
         _timer.Elapsed -= SaveDataTimerEvent;
@@ -24,6 +26,11 @@ public class AutoDataSaver : IDisposable
         _timer.Start();
     }
 
+    /// <summary>
+    /// Timer Event method for auto save timer
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="e"></param>
     private void SaveDataTimerEvent(object? source, ElapsedEventArgs e)
     {
         // Handling with try catch to avoid the timer thread to crash:
@@ -37,6 +44,9 @@ public class AutoDataSaver : IDisposable
         }
     }
 
+    /// <summary>
+    /// Dispose method to save data one last time and close timer properly
+    /// </summary>
     public void Dispose()
     {
         // Save data before garbage collection:
