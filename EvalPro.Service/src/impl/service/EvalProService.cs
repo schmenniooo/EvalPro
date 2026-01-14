@@ -13,12 +13,13 @@ namespace EvalProService.impl.service;
 public class EvalProService : IEvalProServiceApi
 {
     private readonly ServiceData _data;
+    private readonly AutoDataSaver _autoDataSaver;
 
     public EvalProService()
     {
         _data = new ServiceData();
-        var autoSaver = new AutoDataSaver(_data);
-        autoSaver.StartAutoSaveTimer();
+        _autoDataSaver = new AutoDataSaver(_data);
+        _autoDataSaver.StartAutoSaveTimer();
     }
 
     // ===== Committee Operations =====
