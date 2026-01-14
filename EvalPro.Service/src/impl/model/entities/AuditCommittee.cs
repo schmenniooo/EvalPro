@@ -7,8 +7,8 @@ public class AuditCommittee : BaseEntity
     public string ApprenticeShip { get; set; }
     
     public List<DateTime> TestDates { get; set; }
-    
-    public Examinee Examinee { get; set; }
+
+    public Examinee? Examinee { get; set; }
     
     public AuditCommittee(string designation, string apprenticeShip, List<DateTime> testDates)
     {

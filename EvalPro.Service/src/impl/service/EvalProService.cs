@@ -1,10 +1,10 @@
 using EvalProService.api;
-using EvalProService.db;
-using EvalProService.db.autoSaver;
 using EvalProService.impl.model;
 using EvalProService.impl.model.entities;
+using EvalProService.impl.persistency;
+using EvalProService.impl.persistency.autoSaver;
 
-namespace EvalProService.impl;
+namespace EvalProService.impl.service;
 
 public class EvalProService : IServiceApi
 {
@@ -18,32 +18,32 @@ public class EvalProService : IServiceApi
     
     public List<AuditCommittee> GetCommitteesList()
     {
-        return _data.GetCommitteesList();
+        return _data.CommitteesList;
     }
 
     public List<Examinee> GetExamineesList()
     {
-        return _data.GetExamineesList();
+        return _data.ExamineesList;
     }
 
     public List<ProjectDocumentation> GetProjectDocumentationList()
     {
-        return _data.GetProjectDocumentationList();
+        return _data.ProjectDocumentationList;
     }
 
     public List<ProjectPresentation> GetProjectPresentationList()
     {
-        return _data.GetProjectPresentationList();
+        return _data.ProjectPresentationList;
     }
 
     public List<TechConversation> GetProjectTechConversationList()
     {
-        return _data.GetProjectTechConversationList();
+        return _data.ProjectTechConversationList;
     }
 
     public List<SupplementaryExamination> GetSupplementaryExaminationList()
     {
-        return _data.GetSupplementaryExaminationList();
+        return _data.SupplementaryExaminationList;
     }
     
 }
