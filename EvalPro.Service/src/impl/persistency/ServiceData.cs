@@ -37,41 +37,49 @@ public class ServiceData
     {
         if (!File.Exists(ConfigFilePath))
         {
+            File.Create(ConfigFilePath);
             return;
         }
 
+        // Read and parse JSON without lock (slow I/O)
         var jsonString = File.ReadAllText(ConfigFilePath);
         var document = JsonDocument.Parse(jsonString);
         var root = document.RootElement;
 
-        if (root.TryGetProperty("Committees", out JsonElement committeesElement))
-        {
-            _committeeslist = JsonSerializer.Deserialize<List<AuditCommittee>>(committeesElement.GetRawText()) ?? [];
-        }
+        // Deserialize all lists outside the lock
+        var committees = root.TryGetProperty("Committees", out JsonElement committeesElement)
+            ? JsonSerializer.Deserialize<List<AuditCommittee>>(committeesElement.GetRawText()) ?? []
+            : null;
 
-        if (root.TryGetProperty("Examinees", out JsonElement examineesElement))
-        {
-            _examineeslist = JsonSerializer.Deserialize<List<Examinee>>(examineesElement.GetRawText()) ?? [];
-        }
+        var examinees = root.TryGetProperty("Examinees", out JsonElement examineesElement)
+            ? JsonSerializer.Deserialize<List<Examinee>>(examineesElement.GetRawText()) ?? []
+            : null;
 
-        if (root.TryGetProperty("ProjectDocumentation", out JsonElement projectDocElement))
-        {
-            _projectDocumentationList = JsonSerializer.Deserialize<List<ProjectDocumentation>>(projectDocElement.GetRawText()) ?? [];
-        }
+        var projectDocs = root.TryGetProperty("ProjectDocumentation", out JsonElement projectDocElement)
+            ? JsonSerializer.Deserialize<List<ProjectDocumentation>>(projectDocElement.GetRawText()) ?? []
+            : null;
 
-        if (root.TryGetProperty("ProjectPresentation", out JsonElement projectPresElement))
-        {
-            _projectPresentationList = JsonSerializer.Deserialize<List<ProjectPresentation>>(projectPresElement.GetRawText()) ?? [];
-        }
+        var projectPres = root.TryGetProperty("ProjectPresentation", out JsonElement projectPresElement)
+            ? JsonSerializer.Deserialize<List<ProjectPresentation>>(projectPresElement.GetRawText()) ?? []
+            : null;
 
-        if (root.TryGetProperty("TechConversation", out JsonElement techConvElement))
-        {
-            _projectTechConversationList = JsonSerializer.Deserialize<List<TechConversation>>(techConvElement.GetRawText()) ?? [];
-        }
+        var techConv = root.TryGetProperty("TechConversation", out JsonElement techConvElement)
+            ? JsonSerializer.Deserialize<List<TechConversation>>(techConvElement.GetRawText()) ?? []
+            : null;
 
-        if (root.TryGetProperty("SupplementaryExamination", out JsonElement suppExamElement))
+        var suppExam = root.TryGetProperty("SupplementaryExamination", out JsonElement suppExamElement)
+            ? JsonSerializer.Deserialize<List<SupplementaryExamination>>(suppExamElement.GetRawText()) ?? []
+            : null;
+
+        // Lock only for the assignment (fast)
+        lock (_lock)
         {
-            _supplementaryExaminationList = JsonSerializer.Deserialize<List<SupplementaryExamination>>(suppExamElement.GetRawText()) ?? [];
+            if (committees != null) _committeeslist = committees;
+            if (examinees != null) _examineeslist = examinees;
+            if (projectDocs != null) _projectDocumentationList = projectDocs;
+            if (projectPres != null) _projectPresentationList = projectPres;
+            if (techConv != null) _projectTechConversationList = techConv;
+            if (suppExam != null) _supplementaryExaminationList = suppExam;
         }
     }
     
