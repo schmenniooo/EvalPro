@@ -3,7 +3,7 @@ using Timer = System.Timers.Timer;
 
 namespace EvalProService.impl.persistency.autoSaver;
 
-public class AutoDataSaver
+public class AutoDataSaver : IDisposable
 {
     private const int TimerDuration = 500;
     private readonly Timer _timer = new(TimerDuration);
@@ -25,6 +25,12 @@ public class AutoDataSaver
 
     private void SaveDataTimerEvent(object? source, ElapsedEventArgs e)
     {
+        _data.SaveConfigToJson();
+    }
+
+    public void Dispose()
+    {
+        // Save data before garbage collection:
         _data.SaveConfigToJson();
     }
 }
