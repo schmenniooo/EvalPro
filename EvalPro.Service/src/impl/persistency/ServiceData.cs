@@ -6,8 +6,8 @@ namespace EvalProService.impl.persistency;
 
 public class ServiceData
 {
-    private readonly object _lock = new();
-    private readonly string _configFilePath = "config.json";
+    private readonly Lock _lock = new();
+    private const string ConfigFilePath = "config.json";
     
     private List<AuditCommittee> _committeeslist = [];
     private List<Examinee> _examineeslist = [];
@@ -29,18 +29,18 @@ public class ServiceData
         };
 
         var jsonString = JsonSerializer.Serialize(data, options);
-        File.WriteAllText(_configFilePath, jsonString);
+        File.WriteAllText(ConfigFilePath, jsonString);
     }
     
     // Reads values from json files
     public void LoadConfigFromJson()
     {
-        if (!File.Exists(_configFilePath))
+        if (!File.Exists(ConfigFilePath))
         {
             return;
         }
 
-        var jsonString = File.ReadAllText(_configFilePath);
+        var jsonString = File.ReadAllText(ConfigFilePath);
         var document = JsonDocument.Parse(jsonString);
         var root = document.RootElement;
 
