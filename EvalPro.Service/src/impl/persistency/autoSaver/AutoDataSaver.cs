@@ -25,6 +25,7 @@ public class AutoDataSaver : IDisposable
 
     private void SaveDataTimerEvent(object? source, ElapsedEventArgs e)
     {
+        // Handling with try catch to avoid the timer thread to crash:
         try
         {
             _data.SaveConfigToJson();
