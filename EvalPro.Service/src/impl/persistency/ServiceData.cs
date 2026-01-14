@@ -1,5 +1,4 @@
 using System.Text.Json;
-using EvalProService.impl.model;
 using EvalProService.impl.model.entities;
 using EvalProService.impl.model.ratings;
 
@@ -109,22 +108,208 @@ public class ServiceData
     /// <summary>
     /// Creates a copy of the current stored data for thread locking
     /// </summary>
-    /// <returns></returns>
     private object CreateSnapshot()
+    {
+        lock (_lock)
         {
-            lock (_lock)
+            return new
             {
-                return new
-                {
-                    // Creating copies from current values
-                    Committees = CommitteesList.ToList(),
-                    Examinees = ExamineesList.ToList(),
-                    ProjectDocumentation = ProjectDocumentationList.ToList(),
-                    ProjectPresentation = ProjectPresentationList.ToList(),
-                    TechConversation = ProjectTechConversationList.ToList(),
-                    SupplementaryExamination = SupplementaryExaminationList.ToList()
-                };
-            }
+                // Creating copies from current values
+                Committees = CommitteesList.ToList(),
+                Examinees = ExamineesList.ToList(),
+                ProjectDocumentation = ProjectDocumentationList.ToList(),
+                ProjectPresentation = ProjectPresentationList.ToList(),
+                TechConversation = ProjectTechConversationList.ToList(),
+                SupplementaryExamination = SupplementaryExaminationList.ToList()
+            };
         }
-    
+    }
+
+    // ===== Thread-Safe CRUD Operations =====
+
+    // ----- Committee Operations -----
+
+    public void AddCommittee(AuditCommittee committee)
+    {
+        lock (_lock)
+        {
+            committee.CreatedAt = DateTime.Now;
+            committee.UpdatedAt = DateTime.Now;
+            CommitteesList.Add(committee);
+        }
+    }
+
+    public bool UpdateCommittee(string id, Action<AuditCommittee> updateAction)
+    {
+        lock (_lock)
+        {
+            var committee = CommitteesList.FirstOrDefault(c => c.Id == id);
+            if (committee == null) return false;
+
+            updateAction(committee);
+            committee.UpdatedAt = DateTime.Now;
+            return true;
+        }
+    }
+
+    public bool RemoveCommittee(string id)
+    {
+        lock (_lock)
+        {
+            var committee = CommitteesList.FirstOrDefault(c => c.Id == id);
+            if (committee == null) return false;
+
+            return CommitteesList.Remove(committee);
+        }
+    }
+
+    public AuditCommittee? GetCommitteeById(string id)
+    {
+        lock (_lock)
+        {
+            return CommitteesList.FirstOrDefault(c => c.Id == id);
+        }
+    }
+
+    public IReadOnlyList<AuditCommittee> GetAllCommittees()
+    {
+        lock (_lock)
+        {
+            return CommitteesList.ToList().AsReadOnly();
+        }
+    }
+
+    // ----- Examinee Operations -----
+
+    public void AddExaminee(Examinee examinee)
+    {
+        lock (_lock)
+        {
+            examinee.CreatedAt = DateTime.Now;
+            examinee.UpdatedAt = DateTime.Now;
+            ExamineesList.Add(examinee);
+        }
+    }
+
+    public bool UpdateExaminee(string id, Action<Examinee> updateAction)
+    {
+        lock (_lock)
+        {
+            var examinee = ExamineesList.FirstOrDefault(e => e.Id == id);
+            if (examinee == null) return false;
+
+            updateAction(examinee);
+            examinee.UpdatedAt = DateTime.Now;
+            return true;
+        }
+    }
+
+    public bool RemoveExaminee(string id)
+    {
+        lock (_lock)
+        {
+            var examinee = ExamineesList.FirstOrDefault(e => e.Id == id);
+            if (examinee == null) return false;
+
+            return ExamineesList.Remove(examinee);
+        }
+    }
+
+    public Examinee? GetExamineeById(string id)
+    {
+        lock (_lock)
+        {
+            return ExamineesList.FirstOrDefault(e => e.Id == id);
+        }
+    }
+
+    public IReadOnlyList<Examinee> GetAllExaminees()
+    {
+        lock (_lock)
+        {
+            return ExamineesList.ToList().AsReadOnly();
+        }
+    }
+
+    // ----- ProjectDocumentation Operations -----
+
+    public void AddProjectDocumentation(ProjectDocumentation doc)
+    {
+        lock (_lock)
+        {
+            doc.CreatedAt = DateTime.Now;
+            doc.ModifiedAt = DateTime.Now;
+            ProjectDocumentationList.Add(doc);
+        }
+    }
+
+    public ProjectDocumentation? GetProjectDocumentationById(string id)
+    {
+        lock (_lock)
+        {
+            return ProjectDocumentationList.FirstOrDefault(d => d.Id == id);
+        }
+    }
+
+    // ----- ProjectPresentation Operations -----
+
+    public void AddProjectPresentation(ProjectPresentation presentation)
+    {
+        lock (_lock)
+        {
+            presentation.CreatedAt = DateTime.Now;
+            presentation.ModifiedAt = DateTime.Now;
+            ProjectPresentationList.Add(presentation);
+        }
+    }
+
+    public ProjectPresentation? GetProjectPresentationById(string id)
+    {
+        lock (_lock)
+        {
+            return ProjectPresentationList.FirstOrDefault(p => p.Id == id);
+        }
+    }
+
+    // ----- TechConversation Operations -----
+
+    public void AddTechConversation(TechConversation conversation)
+    {
+        lock (_lock)
+        {
+            conversation.CreatedAt = DateTime.Now;
+            conversation.ModifiedAt = DateTime.Now;
+            ProjectTechConversationList.Add(conversation);
+        }
+    }
+
+    public TechConversation? GetTechConversationById(string id)
+    {
+        lock (_lock)
+        {
+            return ProjectTechConversationList.FirstOrDefault(t => t.Id == id);
+        }
+    }
+
+    // ----- SupplementaryExamination Operations -----
+
+    public void AddSupplementaryExamination(SupplementaryExamination exam)
+    {
+        lock (_lock)
+        {
+            //exam.ModifiedAt = DateTime.Now;
+            //exam.ModifiedAt = DateTime.Now;
+            SupplementaryExaminationList.Add(exam);
+        }
+    }
+
+    public SupplementaryExamination? GetSupplementaryExaminationById(string id)
+    {
+        lock (_lock)
+        {
+            //return SupplementaryExaminationList.FirstOrDefault(s => s.Id == id);
+        }
+
+        return null;
+    }
 }
