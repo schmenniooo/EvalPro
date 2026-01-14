@@ -33,5 +33,6 @@ public class AutoDataSaver : IDisposable
         // Save data before garbage collection:
         _data.SaveConfigToJson();
         _timer.Stop();
+        _timer.Dispose();
     }
 }
