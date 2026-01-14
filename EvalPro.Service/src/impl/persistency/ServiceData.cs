@@ -284,6 +284,10 @@ public class ServiceData
 
     // ----- ProjectDocumentation Operations -----
 
+    /// <summary>
+    /// Adds given ProjectDocumentation object to the list
+    /// </summary>
+    /// <param name="doc"></param>
     public void AddProjectDocumentation(ProjectDocumentation doc)
     {
         lock (_lock)
@@ -294,6 +298,11 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    /// Returns ProjectDocumentation object if found by id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public ProjectDocumentation? GetProjectDocumentationById(string id)
     {
         lock (_lock)
@@ -304,6 +313,10 @@ public class ServiceData
 
     // ----- ProjectPresentation Operations -----
 
+    /// <summary>
+    /// Adds given ProjectPresentation object to the list
+    /// </summary>
+    /// <param name="presentation"></param>
     public void AddProjectPresentation(ProjectPresentation presentation)
     {
         lock (_lock)
@@ -314,6 +327,11 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    /// Returns ProjectPresentation object if found by id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public ProjectPresentation? GetProjectPresentationById(string id)
     {
         lock (_lock)
@@ -324,6 +342,10 @@ public class ServiceData
 
     // ----- TechConversation Operations -----
 
+    /// <summary>
+    /// Adds a given TechConversation object to the list
+    /// </summary>
+    /// <param name="conversation"></param>
     public void AddTechConversation(TechConversation conversation)
     {
         lock (_lock)
@@ -334,6 +356,11 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    /// Returns a TechConversation object if found by id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public TechConversation? GetTechConversationById(string id)
     {
         lock (_lock)
@@ -344,6 +371,10 @@ public class ServiceData
 
     // ----- SupplementaryExamination Operations -----
 
+    /// <summary>
+    /// Adds a given SupplementaryExamination object to the list
+    /// </summary>
+    /// <param name="exam"></param>
     public void AddSupplementaryExamination(SupplementaryExamination exam)
     {
         lock (_lock)
@@ -354,6 +385,11 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    /// Returns a SupplementaryExamination object if found by id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public SupplementaryExamination? GetSupplementaryExaminationById(string id)
     {
         lock (_lock)
