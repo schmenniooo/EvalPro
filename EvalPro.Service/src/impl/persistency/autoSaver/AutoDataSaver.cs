@@ -17,6 +17,7 @@ public class AutoDataSaver : IDisposable
     // Creates a new timer instance for 500ms
     public void StartAutoSaveTimer()
     {
+        _timer.Elapsed -= SaveDataTimerEvent;
         _timer.Elapsed += SaveDataTimerEvent;
         _timer.AutoReset = true;
         _timer.Enabled = true;
@@ -40,6 +41,9 @@ public class AutoDataSaver : IDisposable
     {
         // Save data before garbage collection:
         _data.SaveConfigToJson();
+        
+        // Cleaning up timer instance
+        _timer.Elapsed -= SaveDataTimerEvent;
         _timer.Stop();
         _timer.Dispose();
     }
