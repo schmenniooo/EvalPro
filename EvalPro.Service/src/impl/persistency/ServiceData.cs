@@ -9,12 +9,12 @@ public class ServiceData
     private readonly Lock _lock = new();
     private const string ConfigFilePath = "config.json";
     
-    private List<AuditCommittee> _committeesList = [];
-    private List<Examinee> _examineesList = [];
-    private List<ProjectDocumentation> _projectDocumentationList = [];
-    private List<ProjectPresentation> _projectPresentationList = [];
-    private List<TechConversation> _projectTechConversationList = [];
-    private List<SupplementaryExamination> _supplementaryExaminationList = [];
+    public List<AuditCommittee> CommitteesList = [];
+    public List<Examinee> ExamineesList = [];
+    public List<ProjectDocumentation> ProjectDocumentationList = [];
+    public List<ProjectPresentation> ProjectPresentationList = [];
+    public List<TechConversation> ProjectTechConversationList = [];
+    public List<SupplementaryExamination> SupplementaryExaminationList = [];
 
     public ServiceData()
     {
@@ -83,12 +83,12 @@ public class ServiceData
         // Lock only for the assignment (fast)
         lock (_lock)
         {
-            if (committees != null) _committeesList = committees;
-            if (examinees != null) _examineesList = examinees;
-            if (projectDocs != null) _projectDocumentationList = projectDocs;
-            if (projectPres != null) _projectPresentationList = projectPres;
-            if (techConv != null) _projectTechConversationList = techConv;
-            if (suppExam != null) _supplementaryExaminationList = suppExam;
+            if (committees != null) CommitteesList = committees;
+            if (examinees != null) ExamineesList = examinees;
+            if (projectDocs != null) ProjectDocumentationList = projectDocs;
+            if (projectPres != null) ProjectPresentationList = projectPres;
+            if (techConv != null) ProjectTechConversationList = techConv;
+            if (suppExam != null) SupplementaryExaminationList = suppExam;
         }
     }
     
@@ -102,44 +102,14 @@ public class ServiceData
                 return new
                 {
                     // Creating copies from current values
-                    Committees = _committeesList.ToList(),
-                    Examinees = _examineesList.ToList(),
-                    ProjectDocumentation = _projectDocumentationList.ToList(),
-                    ProjectPresentation = _projectPresentationList.ToList(),
-                    TechConversation = _projectTechConversationList.ToList(),
-                    SupplementaryExamination = _supplementaryExaminationList.ToList()
+                    Committees = CommitteesList.ToList(),
+                    Examinees = ExamineesList.ToList(),
+                    ProjectDocumentation = ProjectDocumentationList.ToList(),
+                    ProjectPresentation = ProjectPresentationList.ToList(),
+                    TechConversation = ProjectTechConversationList.ToList(),
+                    SupplementaryExamination = SupplementaryExaminationList.ToList()
                 };
             }
         }
     
-    public List<AuditCommittee> GetCommitteesList()
-    {
-        return _committeesList;
-    }
-
-    public List<Examinee> GetExamineesList()
-    {
-        return _examineesList;
-    }
-
-    public List<ProjectDocumentation> GetProjectDocumentationList()
-    {
-        return _projectDocumentationList;
-    }
-
-    public List<ProjectPresentation> GetProjectPresentationList()
-    {
-        return _projectPresentationList;
-    }
-
-    public List<TechConversation> GetProjectTechConversationList()
-    {
-        return _projectTechConversationList;
-    }
-
-    public List<SupplementaryExamination> GetSupplementaryExaminationList()
-    {
-        return _supplementaryExaminationList;
-    }
-
 }
