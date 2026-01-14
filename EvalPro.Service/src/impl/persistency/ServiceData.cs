@@ -46,7 +46,7 @@ public class ServiceData
     {
         if (!File.Exists(ConfigFilePath))
         {
-            File.Create(ConfigFilePath);
+            File.Create(ConfigFilePath).Dispose();
             return;
         }
 
