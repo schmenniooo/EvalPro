@@ -15,7 +15,10 @@ public class AuditCommittee : BaseEntity
         Designation = designation;
         ApprenticeShip = apprenticeShip;
         TestDates = testDates;
-        
-        // Examinee = new Examinee()
+    }
+
+    public void SetExaminee(Examinee examinee)
+    {
+        Examinee = examinee;
     }
 }
