@@ -16,6 +16,11 @@ public class ServiceData
     private List<TechConversation> _projectTechConversationList = [];
     private List<SupplementaryExamination> _supplementaryExaminationList = [];
 
+    public ServiceData()
+    {
+        LoadConfigFromJson();
+    }
+
     /**
      * Writes current attribute values into local json files
      */
@@ -37,7 +42,7 @@ public class ServiceData
     /**
      * Reads values from json files
      */
-    public void LoadConfigFromJson()
+    private void LoadConfigFromJson()
     {
         if (!File.Exists(ConfigFilePath))
         {
