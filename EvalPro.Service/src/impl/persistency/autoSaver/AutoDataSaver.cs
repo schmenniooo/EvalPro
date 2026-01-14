@@ -25,7 +25,14 @@ public class AutoDataSaver : IDisposable
 
     private void SaveDataTimerEvent(object? source, ElapsedEventArgs e)
     {
-        _data.SaveConfigToJson();
+        try
+        {
+            _data.SaveConfigToJson();
+        }
+        catch (Exception)
+        {
+            // Logging
+        }
     }
 
     public void Dispose()
