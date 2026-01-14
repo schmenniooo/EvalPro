@@ -50,10 +50,18 @@ public class ServiceData
             return;
         }
 
-        // Read and parse JSON without lock (slow I/O)
-        var jsonString = File.ReadAllText(ConfigFilePath);
-        var document = JsonDocument.Parse(jsonString);
-        var root = document.RootElement;
+        var root = new JsonElement();
+        try
+        {
+            // Read and parse JSON without lock (slow I/O)
+            var jsonString = File.ReadAllText(ConfigFilePath);
+            var document = JsonDocument.Parse(jsonString);
+            root = document.RootElement;
+        }
+        catch (JsonException)
+        {
+            // Logging
+        }
 
         // Deserialize all lists outside the lock
         var committees = root.TryGetProperty("Committees", out JsonElement committeesElement)
