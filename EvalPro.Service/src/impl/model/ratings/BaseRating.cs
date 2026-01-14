@@ -8,6 +8,8 @@ public class BaseRating
     
     public Dictionary<string, string> CommentsPerCriteria { get; set; }
     
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    
     public DateTime CreatedAt { get; set; }
     
     public DateTime ModifiedAt { get; set; }
