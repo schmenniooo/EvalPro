@@ -115,6 +115,7 @@ public class ServiceData
     /// <summary>
     /// Creates a copy of the current stored data for thread locking
     /// </summary>
+    /// <returns>An anonymous object containing copies of all data lists</returns>
     private object CreateSnapshot()
     {
         lock (_lock)
@@ -155,7 +156,7 @@ public class ServiceData
     /// </summary>
     /// <param name="id"></param>
     /// <param name="updateAction"></param>
-    /// <returns></returns>
+    /// <returns>True if the committee was found and updated, false if not found</returns>
     public bool UpdateCommittee(string id, Action<AuditCommittee> updateAction)
     {
         lock (_lock)
@@ -173,7 +174,7 @@ public class ServiceData
     /// Searches for committee object with given id
     /// </summary>
     /// <param name="id"></param>
-    /// <returns></returns>
+    /// <returns>True if the committee was found and removed, false if not found</returns>
     public bool RemoveCommittee(string id)
     {
         lock (_lock)
@@ -187,7 +188,7 @@ public class ServiceData
     /// Searches for a committee object with given id and returns it
     /// </summary>
     /// <param name="id"></param>
-    /// <returns></returns>
+    /// <returns>The AuditCommittee object if found, null otherwise</returns>
     public AuditCommittee? GetCommitteeById(string id)
     {
         lock (_lock)
@@ -199,7 +200,7 @@ public class ServiceData
     /// <summary>
     ///  Returns the list of committee's as readonly to manage access on it
     /// </summary>
-    /// <returns></returns>
+    /// <returns>A readonly list containing copies of all AuditCommittee objects</returns>
     public IReadOnlyList<AuditCommittee> GetAllCommittees()
     {
         lock (_lock)
@@ -229,7 +230,7 @@ public class ServiceData
     /// </summary>
     /// <param name="id"></param>
     /// <param name="updateAction"></param>
-    /// <returns></returns>
+    /// <returns>True if the examinee was found and updated, false if not found</returns>
     public bool UpdateExaminee(string id, Action<Examinee> updateAction)
     {
         lock (_lock)
@@ -247,7 +248,7 @@ public class ServiceData
     /// Searches for Examinee object with given id and removes it
     /// </summary>
     /// <param name="id"></param>
-    /// <returns></returns>
+    /// <returns>True if the examinee was found and removed, false if not found</returns>
     public bool RemoveExaminee(string id)
     {
         lock (_lock)
@@ -261,7 +262,7 @@ public class ServiceData
     /// Searches for examinee object by given id
     /// </summary>
     /// <param name="id"></param>
-    /// <returns></returns>
+    /// <returns>The Examinee object if found, null otherwise</returns>
     public Examinee? GetExamineeById(string id)
     {
         lock (_lock)
@@ -273,7 +274,7 @@ public class ServiceData
     /// <summary>
     /// Returns examinee list as readonly list
     /// </summary>
-    /// <returns></returns>
+    /// <returns>A readonly list containing copies of all Examinee objects</returns>
     public IReadOnlyList<Examinee> GetAllExaminees()
     {
         lock (_lock)
@@ -302,7 +303,7 @@ public class ServiceData
     /// Returns ProjectDocumentation object if found by id
     /// </summary>
     /// <param name="id"></param>
-    /// <returns></returns>
+    /// <returns>The ProjectDocumentation object if found, null otherwise</returns>
     public ProjectDocumentation? GetProjectDocumentationById(string id)
     {
         lock (_lock)
@@ -331,7 +332,7 @@ public class ServiceData
     /// Returns ProjectPresentation object if found by id
     /// </summary>
     /// <param name="id"></param>
-    /// <returns></returns>
+    /// <returns>The ProjectPresentation object if found, null otherwise</returns>
     public ProjectPresentation? GetProjectPresentationById(string id)
     {
         lock (_lock)
@@ -360,7 +361,7 @@ public class ServiceData
     /// Returns a TechConversation object if found by id
     /// </summary>
     /// <param name="id"></param>
-    /// <returns></returns>
+    /// <returns>The TechConversation object if found, null otherwise</returns>
     public TechConversation? GetTechConversationById(string id)
     {
         lock (_lock)
@@ -389,7 +390,7 @@ public class ServiceData
     /// Returns a SupplementaryExamination object if found by id
     /// </summary>
     /// <param name="id"></param>
-    /// <returns></returns>
+    /// <returns>The SupplementaryExamination object if found, null otherwise</returns>
     public SupplementaryExamination? GetSupplementaryExaminationById(string id)
     {
         lock (_lock)
