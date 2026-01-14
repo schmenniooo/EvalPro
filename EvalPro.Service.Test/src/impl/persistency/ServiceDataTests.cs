@@ -7,6 +7,7 @@ namespace EvalProServiceTest.impl.persistency;
 public class ServiceDataTests : IDisposable
 {
     private readonly ServiceData _serviceData;
+    private static readonly DateTime FixedTestDate = new(2026, 6, 15, 10, 30, 0);
 
     public ServiceDataTests()
     {
@@ -34,11 +35,11 @@ public class ServiceDataTests : IDisposable
     [Fact]
     public void SaveConfigToJson_CreatesJsonFile()
     {
-        // Arrange - Create test committee
+        // Arrange - Create test committee with fixed date
         var testCommittee = new AuditCommittee(
             designation: "Test Committee",
             apprenticeShip: "Software Development",
-            testDates: new List<DateTime> { DateTime.Now }
+            testDates: new List<DateTime> { FixedTestDate }
         );
         _serviceData.CommitteesList.Add(testCommittee);
 
@@ -51,6 +52,7 @@ public class ServiceDataTests : IDisposable
         // Verify file has content
         var fileContent = File.ReadAllText("config.json");
         Assert.Contains("Test Committee", fileContent);
+        Assert.Contains("Software Development", fileContent);
     }
 
     [Fact]
@@ -66,17 +68,22 @@ public class ServiceDataTests : IDisposable
         var newServiceData = new ServiceData();
         Assert.Empty(newServiceData.CommitteesList);
         Assert.Empty(newServiceData.ExamineesList);
+        Assert.Empty(newServiceData.ProjectDocumentationList);
+        Assert.Empty(newServiceData.ProjectPresentationList);
+        Assert.Empty(newServiceData.ProjectTechConversationList);
+        Assert.Empty(newServiceData.SupplementaryExaminationList);
     }
 
     [Fact]
     public void SaveAndLoad_PreservesAuditCommitteeData()
     {
-        // Arrange - Create test data
-        var testDate = new DateTime(2026, 6, 15);
+        // Arrange - Create test data with fixed dates
+        var testDate1 = new DateTime(2026, 6, 15);
+        var testDate2 = new DateTime(2026, 6, 20);
         var testCommittee = new AuditCommittee(
             designation: "Backend Team",
             apprenticeShip: "Application Development",
-            testDates: new List<DateTime> { testDate }
+            testDates: new List<DateTime> { testDate1, testDate2 }
         );
         _serviceData.CommitteesList.Add(testCommittee);
 
@@ -88,33 +95,122 @@ public class ServiceDataTests : IDisposable
         Assert.Single(newServiceData.CommitteesList);
         Assert.Equal("Backend Team", newServiceData.CommitteesList[0].Designation);
         Assert.Equal("Application Development", newServiceData.CommitteesList[0].ApprenticeShip);
-        Assert.Single(newServiceData.CommitteesList[0].TestDates);
+        Assert.Equal(2, newServiceData.CommitteesList[0].TestDates.Count);
+        Assert.Contains(testDate1, newServiceData.CommitteesList[0].TestDates);
+        Assert.Contains(testDate2, newServiceData.CommitteesList[0].TestDates);
     }
 
     [Fact]
-    public void SaveConfigToJson_IsThreadSafe()
+    public void SaveAndLoad_PreservesMultipleCommittees()
     {
-        // Arrange - Add test data
-        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { DateTime.Now });
+        // Arrange - Create multiple committees
+        var committee1 = new AuditCommittee("Team A", "IT", new List<DateTime> { FixedTestDate });
+        var committee2 = new AuditCommittee("Team B", "Development", new List<DateTime> { FixedTestDate.AddDays(1) });
+        var committee3 = new AuditCommittee("Team C", "Testing", new List<DateTime> { FixedTestDate.AddDays(2) });
+
+        _serviceData.CommitteesList.Add(committee1);
+        _serviceData.CommitteesList.Add(committee2);
+        _serviceData.CommitteesList.Add(committee3);
+
+        // Act
+        _serviceData.SaveConfigToJson();
+        var newServiceData = new ServiceData();
+
+        // Assert
+        Assert.Equal(3, newServiceData.CommitteesList.Count);
+        Assert.Equal("Team A", newServiceData.CommitteesList[0].Designation);
+        Assert.Equal("Team B", newServiceData.CommitteesList[1].Designation);
+        Assert.Equal("Team C", newServiceData.CommitteesList[2].Designation);
+    }
+
+    [Fact]
+    public void SaveConfigToJson_WithConcurrentSaves_CompletesSuccessfully()
+    {
+        // Arrange - Add test data with fixed date
+        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
         _serviceData.CommitteesList.Add(committee);
 
-        // Act - Call save multiple times rapidly (simulating concurrent access)
+        // Act - Call save multiple times concurrently
         var tasks = new List<Task>();
-        for (int i = 0; i < 5; i++)
+        var exceptionsCaught = 0;
+
+        for (int i = 0; i < 10; i++)
         {
-            tasks.Add(Task.Run(() => _serviceData.SaveConfigToJson()));
+            tasks.Add(Task.Run(() =>
+            {
+                try
+                {
+                    _serviceData.SaveConfigToJson();
+                }
+                catch
+                {
+                    Interlocked.Increment(ref exceptionsCaught);
+                }
+            }));
         }
 
-        // Wait for all tasks to complete
-        // Disabling warning that tests shouldn't be stopped
         #pragma warning disable xUnit1031
-        
         Task.WaitAll(tasks.ToArray());
-        
         #pragma warning restore xUnit1031
 
-        // Assert - Should complete without exceptions
+        // Assert - Should complete without exceptions and file should be valid
+        Assert.Equal(0, exceptionsCaught);
         Assert.True(File.Exists("config.json"));
+
+        // Verify the saved data is still valid
+        var loadedData = new ServiceData();
+        Assert.Single(loadedData.CommitteesList);
+    }
+
+    [Fact]
+    public void LoadConfigFromJson_WithMalformedJson_ThrowsException()
+    {
+        // Arrange - Write malformed JSON
+        File.WriteAllText("config.json", "{ this is not valid JSON }");
+
+        // Act & Assert - Should throw exception during load
+        Assert.ThrowsAny<Exception>(() => new ServiceData());
+    }
+
+    [Fact]
+    public void LoadConfigFromJson_WithEmptyFile_HandlesGracefully()
+    {
+        // Arrange - Create empty file
+        File.WriteAllText("config.json", "");
+
+        // Act & Assert - Should throw exception
+        Assert.ThrowsAny<Exception>(() => new ServiceData());
+    }
+
+    [Fact]
+    public void LoadConfigFromJson_WithValidButEmptyJson_LoadsEmptyLists()
+    {
+        // Arrange - Write valid empty JSON object
+        File.WriteAllText("config.json", "{}");
+
+        // Act
+        var serviceData = new ServiceData();
+
+        // Assert - All lists should be empty
+        Assert.Empty(serviceData.CommitteesList);
+        Assert.Empty(serviceData.ExamineesList);
+        Assert.Empty(serviceData.ProjectDocumentationList);
+    }
+
+    [Fact]
+    public void SaveConfigToJson_CreatesReadableJsonFormat()
+    {
+        // Arrange
+        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
+        _serviceData.CommitteesList.Add(committee);
+
+        // Act
+        _serviceData.SaveConfigToJson();
+
+        // Assert - JSON should be indented and readable
+        var jsonContent = File.ReadAllText("config.json");
+        Assert.Contains("{\n", jsonContent); // Check for formatting
+        Assert.Contains("  \"Committees\"", jsonContent); // Check for indentation
     }
 
     public void Dispose()

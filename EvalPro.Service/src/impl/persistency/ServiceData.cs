@@ -9,6 +9,7 @@ public class ServiceData
     private readonly Lock _lock = new();
     private const string ConfigFilePath = "config.json";
     
+    // TODO: Evalute if these fields should be public (e.g Thread Safety and write operations)
     public List<AuditCommittee> CommitteesList = [];
     public List<Examinee> ExamineesList = [];
     public List<ProjectDocumentation> ProjectDocumentationList = [];
