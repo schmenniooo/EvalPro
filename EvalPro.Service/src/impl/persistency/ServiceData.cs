@@ -15,8 +15,10 @@ public class ServiceData
     private List<ProjectPresentation> _projectPresentationList = [];
     private List<TechConversation> _projectTechConversationList = [];
     private List<SupplementaryExamination> _supplementaryExaminationList = [];
-    
-    // Writes current attribute values into local json files
+
+    /**
+     * Writes current attribute values into local json files
+     */
     public void SaveConfigToJson()
     {
         // Capture snapshot while locked (fast)
@@ -32,7 +34,9 @@ public class ServiceData
         File.WriteAllText(ConfigFilePath, jsonString);
     }
     
-    // Reads values from json files
+    /**
+     * Reads values from json files
+     */
     public void LoadConfigFromJson()
     {
         if (!File.Exists(ConfigFilePath))
@@ -83,13 +87,17 @@ public class ServiceData
         }
     }
     
+    /**
+     * Creates a copy of the current stored data for thread locking
+     */
     private object CreateSnapshot()
         {
             lock (_lock)
             {
                 return new
                 {
-                    Committees = _committeeslist.ToList(),  // Create copies
+                    // Creating copies from current values
+                    Committees = _committeeslist.ToList(),
                     Examinees = _examineeslist.ToList(),
                     ProjectDocumentation = _projectDocumentationList.ToList(),
                     ProjectPresentation = _projectPresentationList.ToList(),
