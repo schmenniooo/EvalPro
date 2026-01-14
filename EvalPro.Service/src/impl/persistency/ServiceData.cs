@@ -6,6 +6,7 @@ namespace EvalProService.impl.persistency;
 
 public class ServiceData
 {
+    private readonly object _lock = new();
     private readonly string _configFilePath = "config.json";
     
     private List<AuditCommittee> _committeeslist = [];
@@ -18,16 +19,10 @@ public class ServiceData
     // Writes current attribute values into local json files
     public void SaveConfigToJson()
     {
-        var data = new
-        {
-            Committees = _committeeslist,
-            Examinees = _examineeslist,
-            ProjectDocumentation = _projectDocumentationList,
-            ProjectPresentation = _projectPresentationList,
-            TechConversation = _projectTechConversationList,
-            SupplementaryExamination = _supplementaryExaminationList
-        };
+        // Capture snapshot while locked (fast)
+        var data = CreateSnapshot();
 
+        // Serialize and write to disk without lock (slow I/O)
         var options = new JsonSerializerOptions
         {
             WriteIndented = true
@@ -36,7 +31,7 @@ public class ServiceData
         var jsonString = JsonSerializer.Serialize(data, options);
         File.WriteAllText(_configFilePath, jsonString);
     }
-
+    
     // Reads values from json files
     public void LoadConfigFromJson()
     {
@@ -79,6 +74,22 @@ public class ServiceData
             _supplementaryExaminationList = JsonSerializer.Deserialize<List<SupplementaryExamination>>(suppExamElement.GetRawText()) ?? [];
         }
     }
+    
+    private object CreateSnapshot()
+        {
+            lock (_lock)
+            {
+                return new
+                {
+                    Committees = _committeeslist.ToList(),  // Create copies
+                    Examinees = _examineeslist.ToList(),
+                    ProjectDocumentation = _projectDocumentationList.ToList(),
+                    ProjectPresentation = _projectPresentationList.ToList(),
+                    TechConversation = _projectTechConversationList.ToList(),
+                    SupplementaryExamination = _supplementaryExaminationList.ToList()
+                };
+            }
+        }
     
     public List<AuditCommittee> GetCommitteesList()
     {
