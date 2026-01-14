@@ -86,6 +86,14 @@ public class EvalProService : IEvalProServiceApi
 
     // ===== Examinee Operations =====
 
+    /// <summary>
+    /// Creates a new Examinee object with given parameters
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="company"></param>
+    /// <param name="contactPerson"></param>
+    /// <param name="projectTitle"></param>
+    /// <returns></returns>
     public Examinee AddExaminee(string name, string company, string contactPerson, string projectTitle)
     {
         var examinee = new Examinee(name, company, contactPerson, projectTitle);
@@ -93,6 +101,15 @@ public class EvalProService : IEvalProServiceApi
         return examinee;
     }
 
+    /// <summary>
+    /// Updates an examinee object by given parameters
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="name"></param>
+    /// <param name="company"></param>
+    /// <param name="contactPerson"></param>
+    /// <param name="projectTitle"></param>
+    /// <returns></returns>
     public bool UpdateExaminee(string id, string? name = null, string? company = null, string? contactPerson = null, string? projectTitle = null)
     {
         return _data.UpdateExaminee(id, examinee =>
@@ -104,6 +121,11 @@ public class EvalProService : IEvalProServiceApi
         });
     }
 
+    /// <summary>
+    /// Searches for examinee object in committee's and deletes it's reference to the committee
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public bool RemoveExaminee(string id)
     {
         // First, remove from any committees that reference this examinee
@@ -119,11 +141,20 @@ public class EvalProService : IEvalProServiceApi
         return _data.RemoveExaminee(id);
     }
 
+    /// <summary>
+    /// Returns an examinee object found with given id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public Examinee? GetExamineeById(string id)
     {
         return _data.GetExamineeById(id);
     }
 
+    /// <summary>
+    /// Returns examinee list from data class as readonly to avoid unmanaged access 
+    /// </summary>
+    /// <returns></returns>
     public IReadOnlyList<Examinee> GetAllExaminees()
     {
         return _data.GetAllExaminees();

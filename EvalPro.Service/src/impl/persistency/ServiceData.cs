@@ -210,6 +210,10 @@ public class ServiceData
 
     // ----- Examinee Operations -----
 
+    /// <summary>
+    /// Adds a given Examinee object to it's list
+    /// </summary>
+    /// <param name="examinee"></param>
     public void AddExaminee(Examinee examinee)
     {
         lock (_lock)
@@ -220,6 +224,12 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    /// Searches for examinee object with given callbacks
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="updateAction"></param>
+    /// <returns></returns>
     public bool UpdateExaminee(string id, Action<Examinee> updateAction)
     {
         lock (_lock)
@@ -233,17 +243,25 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    /// Searches for Examinee object with given id and removes it
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public bool RemoveExaminee(string id)
     {
         lock (_lock)
         {
             var examinee = ExamineesList.FirstOrDefault(e => e.Id == id);
-            if (examinee == null) return false;
-
-            return ExamineesList.Remove(examinee);
+            return examinee != null && ExamineesList.Remove(examinee);
         }
     }
 
+    /// <summary>
+    /// Searches for examinee object by given id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public Examinee? GetExamineeById(string id)
     {
         lock (_lock)
@@ -252,6 +270,10 @@ public class ServiceData
         }
     }
 
+    /// <summary>
+    /// Returns examinee list as readonly list
+    /// </summary>
+    /// <returns></returns>
     public IReadOnlyList<Examinee> GetAllExaminees()
     {
         lock (_lock)
