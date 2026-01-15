@@ -7,11 +7,11 @@ public class SupplementaryExamination
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
     
     public string ChosenTestArea { get; set; }
-    public int points { get; set; }
+    public int Points { get; set; }
 
     public SupplementaryExamination(string chosenTestArea, int points)
     {
         ChosenTestArea = chosenTestArea;
-        this.points = points;
+        this.Points = points;
     }
 }

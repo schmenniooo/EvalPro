@@ -294,7 +294,7 @@ public class ServiceData
         lock (_lock)
         {
             doc.CreatedAt = DateTime.Now;
-            doc.ModifiedAt = DateTime.Now;
+            doc.UpdatedAt = DateTime.Now;
             _projectDocumentationList.Add(doc);
         }
     }
@@ -323,7 +323,7 @@ public class ServiceData
         lock (_lock)
         {
             presentation.CreatedAt = DateTime.Now;
-            presentation.ModifiedAt = DateTime.Now;
+            presentation.UpdatedAt = DateTime.Now;
             _projectPresentationList.Add(presentation);
         }
     }
@@ -352,7 +352,7 @@ public class ServiceData
         lock (_lock)
         {
             conversation.CreatedAt = DateTime.Now;
-            conversation.ModifiedAt = DateTime.Now;
+            conversation.UpdatedAt = DateTime.Now;
             _projectTechConversationList.Add(conversation);
         }
     }

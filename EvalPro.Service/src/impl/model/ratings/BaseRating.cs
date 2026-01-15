@@ -12,7 +12,7 @@ public class BaseRating
     
     public DateTime CreatedAt { get; set; }
     
-    public DateTime ModifiedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
     
     public BaseRating(string finalComment, Dictionary<string, int> pointsPerCriteria, Dictionary<string, string> commentsPerCriteria)
     {
@@ -20,6 +20,6 @@ public class BaseRating
         PointsPerCriteria = pointsPerCriteria;
         CommentsPerCriteria = commentsPerCriteria;
         CreatedAt = DateTime.Now;
-        ModifiedAt = DateTime.Now;
+        UpdatedAt = DateTime.Now;
     }
 }

@@ -10,16 +10,15 @@ namespace EvalProService.impl.service;
 /// Service layer that manages business logic and relationships between entities
 /// Frontend interacts only with this class
 /// </summary>
-public class EvalProService : IEvalProServiceApi
+public class EvalProService : IEvalProServiceApi, IDisposable
 {
     private readonly ServiceData _data;
-    private readonly AutoDataSaver _autoDataSaver;
 
     public EvalProService()
     {
         _data = new ServiceData();
-        _autoDataSaver = new AutoDataSaver(_data);
-        _autoDataSaver.StartAutoSaveTimer();
+        var autoDataSaver = new AutoDataSaver(_data);
+        autoDataSaver.StartAutoSaveTimer();
     }
 
     // ===== Committee Operations =====
@@ -46,7 +45,7 @@ public class EvalProService : IEvalProServiceApi
     /// <param name="apprenticeShip"></param>
     /// <param name="testDates"></param>
     /// <returns>True if the committee was found and updated, false if not found</returns>
-    public bool UpdateCommittee(string id, string? designation = "", string? apprenticeShip = "", List<DateTime>? testDates = null)
+    public bool UpdateCommittee(string id, string? designation = null, string? apprenticeShip = "", List<DateTime>? testDates = null)
     {
         return _data.UpdateCommittee(id, committee =>
         {
@@ -330,5 +329,14 @@ public class EvalProService : IEvalProServiceApi
         if (examinee?.SupplementaryExaminationId == null) return null;
 
         return _data.GetSupplementaryExaminationById(examinee.SupplementaryExaminationId);
+    }
+
+    /// <summary>
+    /// Dispose function to clean up references
+    /// </summary>
+    /// <exception cref="NotImplementedException"></exception>
+    public void Dispose()
+    {
+        throw new NotImplementedException();
     }
 }
