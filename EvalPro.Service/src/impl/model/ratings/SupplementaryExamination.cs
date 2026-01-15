@@ -8,10 +8,12 @@ public class SupplementaryExamination
     
     public string ChosenTestArea { get; set; }
     public int Points { get; set; }
+    public List<string> Questions { get; set; }
 
-    public SupplementaryExamination(string chosenTestArea, int points)
+    public SupplementaryExamination(string chosenTestArea, int points,  List<string> questions)
     {
         ChosenTestArea = chosenTestArea;
-        this.Points = points;
+        Points = points;
+        Questions = questions;
     }
 }
