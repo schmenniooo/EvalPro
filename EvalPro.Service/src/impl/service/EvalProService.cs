@@ -12,13 +12,14 @@ namespace EvalProService.impl.service;
 /// </summary>
 public class EvalProService : IEvalProServiceApi, IDisposable
 {
+    private readonly AutoDataSaver _autoDataSaver;
     private readonly ServiceData _data;
 
     public EvalProService()
     {
         _data = new ServiceData();
-        var autoDataSaver = new AutoDataSaver(_data);
-        autoDataSaver.StartAutoSaveTimer();
+        _autoDataSaver = new AutoDataSaver(_data);
+        _autoDataSaver.StartAutoSaveTimer();
     }
 
     // ===== Committee Operations =====
@@ -334,9 +335,8 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <summary>
     /// Dispose function to clean up references
     /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
     public void Dispose()
     {
-        throw new NotImplementedException();
+        _autoDataSaver.Dispose();
     }
 }
