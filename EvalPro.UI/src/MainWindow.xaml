@@ -1,0 +1,54 @@
+﻿<Window x:Class="WPFApp1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Names"
+        Height="180"
+        Width="260">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- HEADER -->
+        <Border Grid.Row="0"
+                Grid.ColumnSpan="2"
+                BorderThickness="0,0,0,2"
+                BorderBrush="Black"
+                Padding="10">
+            <TextBlock Text="EvalPro"
+                       FontWeight="Bold"
+                       FontSize="18"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+        </Border>
+        
+        <!-- NAVIGATION --> 
+        <ListView Grid.Row="1" Grid.Column="0" Width="200" FontSize="20">
+             <ListViewItem Content="Home" Height="40"/> 
+             <ListViewItem Content="Prüfungsausschüsse" Height="40"/> 
+             <ListViewItem Content="Prüflinge" Height="40"/> 
+             <ListViewItem Content="Schriftlicher Teil1" Height="40"/> 
+             <ListViewItem Content="Schriftlicher Teil 2" Height="40"/> 
+             <ListViewItem Content="Dokumentation" Height="40"/> 
+             <ListViewItem Content="Präsentation" Height="40"/> 
+             <ListViewItem Content="Mündliche EP" Height="40"/>
+        </ListView>
+
+        <!-- TEXT -->
+        <TextBlock Grid.Row="1"
+                   Grid.Column="1"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   FontWeight="Bold"
+                   FontSize="30"
+                   Text="{Binding GreetingName}"/>
+        
+        </Grid>
+</Window>
