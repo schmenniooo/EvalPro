@@ -1,4 +1,4 @@
-namespace EvalProService.impl.model.rating;
+namespace EvalProService.impl.model.ratings;
 
 public class BaseRating
 {
@@ -8,9 +8,11 @@ public class BaseRating
     
     public Dictionary<string, string> CommentsPerCriteria { get; set; }
     
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    
     public DateTime CreatedAt { get; set; }
     
-    public DateTime ModifiedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
     
     public BaseRating(string finalComment, Dictionary<string, int> pointsPerCriteria, Dictionary<string, string> commentsPerCriteria)
     {
@@ -18,6 +20,6 @@ public class BaseRating
         PointsPerCriteria = pointsPerCriteria;
         CommentsPerCriteria = commentsPerCriteria;
         CreatedAt = DateTime.Now;
-        ModifiedAt = DateTime.Now;
+        UpdatedAt = DateTime.Now;
     }
 }
