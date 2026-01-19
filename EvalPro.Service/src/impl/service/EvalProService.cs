@@ -3,6 +3,8 @@ using EvalProService.impl.model.entities;
 using EvalProService.impl.model.ratings;
 using EvalProService.impl.persistency;
 using EvalProService.impl.persistency.autoSaver;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace EvalProService.impl.service;
 
@@ -14,12 +16,24 @@ public class EvalProService : IEvalProServiceApi, IDisposable
 {
     private readonly AutoDataSaver _autoDataSaver;
     private readonly ServiceData _data;
+    private readonly ILogger<EvalProService> _logger;
 
     public EvalProService()
     {
         _data = new ServiceData();
         _autoDataSaver = new AutoDataSaver(_data);
         _autoDataSaver.StartAutoSaveTimer();
+
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .WriteTo.File("evalpro.log", rollingInterval: RollingInterval.Hour)
+            .CreateLogger();
+        
+        _logger = LoggerFactory.Create(builder =>
+        {
+            builder.AddSerilog();
+        }).CreateLogger<EvalProService>();
     }
 
     // ===== Committee Operations =====
@@ -33,6 +47,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The newly created AuditCommittee object</returns>
     public AuditCommittee AddCommittee(string designation, string apprenticeShip, List<DateTime> testDates)
     {
+        _logger.LogInformation("Creating committee with: {Designation}, {ApprenticeShip}, {TestDates}", designation, apprenticeShip, testDates);
         var committee = new AuditCommittee(designation, apprenticeShip, testDates);
         _data.AddCommittee(committee);
         return committee;
@@ -338,5 +353,6 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void Dispose()
     {
         _autoDataSaver.Dispose();
+        Log.CloseAndFlush();
     }
 }
