@@ -63,12 +63,15 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the committee was found and updated, false if not found</returns>
     public bool UpdateCommittee(string id, string? designation = null, string? apprenticeShip = "", List<DateTime>? testDates = null)
     {
-        return _data.UpdateCommittee(id, committee =>
+        _logger.LogInformation("Updating committee {Id}", id);
+        var result = _data.UpdateCommittee(id, committee =>
         {
             if (designation != null) committee.Designation = designation;
             if (apprenticeShip != null) committee.ApprenticeShip = apprenticeShip;
             if (testDates != null) committee.TestDates = testDates;
         });
+        if (!result) _logger.LogWarning("Committee {Id} not found for update", id);
+        return result;
     }
 
     /// <summary>
@@ -78,7 +81,10 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the committee was found and removed, false if not found</returns>
     public bool RemoveCommittee(string id)
     {
-        return _data.RemoveCommittee(id);
+        _logger.LogInformation("Removing committee {Id}", id);
+        var result = _data.RemoveCommittee(id);
+        if (!result) _logger.LogWarning("Committee {Id} not found for removal", id);
+        return result;
     }
 
     /// <summary>
@@ -88,6 +94,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The AuditCommittee object if found, null otherwise</returns>
     public AuditCommittee? GetCommitteeById(string id)
     {
+        _logger.LogInformation("Getting committee by id {Id}", id);
         return _data.GetCommitteeById(id);
     }
 
@@ -97,6 +104,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>A readonly list containing all AuditCommittee objects</returns>
     public IReadOnlyList<AuditCommittee> GetAllCommittees()
     {
+        _logger.LogInformation("Getting all committees");
         return _data.GetAllCommittees();
     }
 
@@ -112,6 +120,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The newly created Examinee object</returns>
     public Examinee AddExaminee(string name, string company, string contactPerson, string projectTitle)
     {
+        _logger.LogInformation("Creating examinee: {Name}, {Company}, {ContactPerson}, {ProjectTitle}", name, company, contactPerson, projectTitle);
         var examinee = new Examinee(name, company, contactPerson, projectTitle);
         _data.AddExaminee(examinee);
         return examinee;
@@ -128,13 +137,16 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the examinee was found and updated, false if not found</returns>
     public bool UpdateExaminee(string id, string? name = null, string? company = null, string? contactPerson = null, string? projectTitle = null)
     {
-        return _data.UpdateExaminee(id, examinee =>
+        _logger.LogInformation("Updating examinee {Id}", id);
+        var result = _data.UpdateExaminee(id, examinee =>
         {
             if (name != null) examinee.Name = name;
             if (company != null) examinee.Company = company;
             if (contactPerson != null) examinee.ContactPerson = contactPerson;
             if (projectTitle != null) examinee.ProjectTitle = projectTitle;
         });
+        if (!result) _logger.LogWarning("Examinee {Id} not found for update", id);
+        return result;
     }
 
     /// <summary>
@@ -144,17 +156,21 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the examinee was found and removed, false if not found</returns>
     public bool RemoveExaminee(string id)
     {
+        _logger.LogInformation("Removing examinee {Id}", id);
         // First, remove from any committees that reference this examinee
         var committees = _data.GetAllCommittees();
         foreach (var committee in committees)
         {
             if (committee.ExamineeId == id)
             {
+                _logger.LogInformation("Removing examinee {ExamineeId} reference from committee {CommitteeId}", id, committee.Id);
                 _data.UpdateCommittee(committee.Id, c => c.ExamineeId = null);
             }
         }
 
-        return _data.RemoveExaminee(id);
+        var result = _data.RemoveExaminee(id);
+        if (!result) _logger.LogWarning("Examinee {Id} not found for removal", id);
+        return result;
     }
 
     /// <summary>
@@ -164,6 +180,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The Examinee object if found, null otherwise</returns>
     public Examinee? GetExamineeById(string id)
     {
+        _logger.LogInformation("Getting examinee by id {Id}", id);
         return _data.GetExamineeById(id);
     }
 
@@ -173,6 +190,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>A readonly list containing all Examinee objects</returns>
     public IReadOnlyList<Examinee> GetAllExaminees()
     {
+        _logger.LogInformation("Getting all examinees");
         return _data.GetAllExaminees();
     }
 
@@ -184,15 +202,22 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the assignment succeeded, false if examinee or committee not found</returns>
     public bool AssignExamineeToCommittee(string committeeId, string examineeId)
     {
+        _logger.LogInformation("Assigning examinee {ExamineeId} to committee {CommitteeId}", examineeId, committeeId);
         // Verify examinee exists
         var examinee = _data.GetExamineeById(examineeId);
-        if (examinee == null) return false;
+        if (examinee == null)
+        {
+            _logger.LogWarning("Examinee {ExamineeId} not found for assignment", examineeId);
+            return false;
+        }
 
         // Set the relationship
-        return _data.UpdateCommittee(committeeId, committee =>
+        var result = _data.UpdateCommittee(committeeId, committee =>
         {
             committee.ExamineeId = examineeId;
         });
+        if (!result) _logger.LogWarning("Committee {CommitteeId} not found for assignment", committeeId);
+        return result;
     }
 
     /// <summary>
@@ -201,10 +226,13 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the committee was found and the examinee reference was cleared, false if committee not found</returns>
     public bool RemoveExamineeFromCommittee(string committeeId)
     {
-        return _data.UpdateCommittee(committeeId, committee =>
+        _logger.LogInformation("Removing examinee from committee {CommitteeId}", committeeId);
+        var result = _data.UpdateCommittee(committeeId, committee =>
         {
             committee.ExamineeId = null;
         });
+        if (!result) _logger.LogWarning("Committee {CommitteeId} not found", committeeId);
+        return result;
     }
 
     /// <summary>
@@ -213,6 +241,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The Examinee object if found and assigned to the committee, null otherwise</returns>
     public Examinee? GetExamineeForCommittee(string committeeId)
     {
+        _logger.LogInformation("Getting examinee for committee {CommitteeId}", committeeId);
         var committee = _data.GetCommitteeById(committeeId);
         if (committee?.ExamineeId == null) return null;
 
@@ -225,6 +254,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The AuditCommittee object if the examinee is assigned to one, null otherwise</returns>
     public AuditCommittee? GetCommitteeForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting committee for examinee {ExamineeId}", examineeId);
         var committees = _data.GetAllCommittees();
         return committees.FirstOrDefault(c => c.ExamineeId == examineeId);
     }
@@ -239,12 +269,15 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the assignment succeeded, false if examinee not found</returns>
     public bool AssignProjectDocumentation(string examineeId, ProjectDocumentation documentation)
     {
+        _logger.LogInformation("Assigning project documentation {DocumentationId} to examinee {ExamineeId}", documentation.Id, examineeId);
         _data.AddProjectDocumentation(documentation);
 
-        return _data.UpdateExaminee(examineeId, examinee =>
+        var result = _data.UpdateExaminee(examineeId, examinee =>
         {
             examinee.ProjectDocumentationId = documentation.Id;
         });
+        if (!result) _logger.LogWarning("Examinee {ExamineeId} not found for documentation assignment", examineeId);
+        return result;
     }
 
     /// <summary>
@@ -254,6 +287,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The ProjectDocumentation object if found and assigned to the examinee, null otherwise</returns>
     public ProjectDocumentation? GetProjectDocumentationForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting project documentation for examinee {ExamineeId}", examineeId);
         var examinee = _data.GetExamineeById(examineeId);
         if (examinee?.ProjectDocumentationId == null) return null;
 
@@ -268,12 +302,15 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the assignment succeeded, false if examinee not found</returns>
     public bool AssignProjectPresentation(string examineeId, ProjectPresentation presentation)
     {
+        _logger.LogInformation("Assigning project presentation {PresentationId} to examinee {ExamineeId}", presentation.Id, examineeId);
         _data.AddProjectPresentation(presentation);
 
-        return _data.UpdateExaminee(examineeId, examinee =>
+        var result = _data.UpdateExaminee(examineeId, examinee =>
         {
             examinee.ProjectPresentationId = presentation.Id;
         });
+        if (!result) _logger.LogWarning("Examinee {ExamineeId} not found for presentation assignment", examineeId);
+        return result;
     }
 
     /// <summary>
@@ -283,6 +320,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The ProjectPresentation object if found and assigned to the examinee, null otherwise</returns>
     public ProjectPresentation? GetProjectPresentationForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting project presentation for examinee {ExamineeId}", examineeId);
         var examinee = _data.GetExamineeById(examineeId);
         if (examinee?.ProjectPresentationId == null) return null;
 
@@ -297,12 +335,15 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the assignment succeeded, false if examinee not found</returns>
     public bool AssignTechConversation(string examineeId, TechConversation conversation)
     {
+        _logger.LogInformation("Assigning tech conversation {ConversationId} to examinee {ExamineeId}", conversation.Id, examineeId);
         _data.AddTechConversation(conversation);
 
-        return _data.UpdateExaminee(examineeId, examinee =>
+        var result = _data.UpdateExaminee(examineeId, examinee =>
         {
             examinee.TechConversationId = conversation.Id;
         });
+        if (!result) _logger.LogWarning("Examinee {ExamineeId} not found for tech conversation assignment", examineeId);
+        return result;
     }
 
     /// <summary>
@@ -312,6 +353,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The TechConversation object if found and assigned to the examinee, null otherwise</returns>
     public TechConversation? GetTechConversationForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting tech conversation for examinee {ExamineeId}", examineeId);
         var examinee = _data.GetExamineeById(examineeId);
         if (examinee?.TechConversationId == null) return null;
 
@@ -326,12 +368,15 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>True if the assignment succeeded, false if examinee not found</returns>
     public bool AssignSupplementaryExamination(string examineeId, SupplementaryExamination exam)
     {
+        _logger.LogInformation("Assigning supplementary examination {ExamId} to examinee {ExamineeId}", exam.Id, examineeId);
         _data.AddSupplementaryExamination(exam);
 
-        return _data.UpdateExaminee(examineeId, examinee =>
+        var result = _data.UpdateExaminee(examineeId, examinee =>
         {
             examinee.SupplementaryExaminationId = exam.Id;
         });
+        if (!result) _logger.LogWarning("Examinee {ExamineeId} not found for supplementary examination assignment", examineeId);
+        return result;
     }
 
     /// <summary>
@@ -341,6 +386,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The SupplementaryExamination object if found and assigned to the examinee, null otherwise</returns>
     public SupplementaryExamination? GetSupplementaryExaminationForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting supplementary examination for examinee {ExamineeId}", examineeId);
         var examinee = _data.GetExamineeById(examineeId);
         if (examinee?.SupplementaryExaminationId == null) return null;
 
