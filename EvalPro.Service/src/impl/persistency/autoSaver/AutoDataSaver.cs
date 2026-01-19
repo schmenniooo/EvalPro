@@ -15,7 +15,7 @@ public class AutoDataSaver : IDisposable
     /// <summary>
     /// Event raised when a save operation fails. UI can subscribe to show warnings.
     /// </summary>
-    public event EventHandler<SaveErrorEventArgs>? OnSaveError;
+    public event EventHandler<AutoSaveErrorEventArgs>? OnSaveError;
 
     public AutoDataSaver(ServiceData data, ILogger logger)
     {
@@ -51,7 +51,7 @@ public class AutoDataSaver : IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during auto-save at {Timestamp}", DateTime.Now);
-            OnSaveError?.Invoke(this, new SaveErrorEventArgs(ex, isCritical: false));
+            OnSaveError?.Invoke(this, new AutoSaveErrorEventArgs(ex, isCritical: false));
         }
     }
 
@@ -74,7 +74,7 @@ public class AutoDataSaver : IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Critical error during final save on dispose");
-            OnSaveError?.Invoke(this, new SaveErrorEventArgs(ex, isCritical: true));
+            OnSaveError?.Invoke(this, new AutoSaveErrorEventArgs(ex, isCritical: true));
         }
 
         _logger.LogInformation("Auto-Saver disposed");

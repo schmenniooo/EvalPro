@@ -23,7 +23,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// Event raised when auto-save fails. UI can subscribe to show warnings to the user.
     /// Check IsCritical property to determine if this was a final save attempt.
     /// </summary>
-    public event EventHandler<SaveErrorEventArgs>? OnSaveError;
+    public event EventHandler<AutoSaveErrorEventArgs>? OnSaveError;
 
     public EvalProService()
     {
