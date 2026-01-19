@@ -1,4 +1,5 @@
 using System.Timers;
+using EvalProService.impl.exceptions;
 using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
 
@@ -10,6 +11,11 @@ public class AutoDataSaver : IDisposable
     private readonly Timer _timer = new(TimerDuration);
     private readonly ServiceData _data;
     private readonly ILogger _logger;
+
+    /// <summary>
+    /// Event raised when a save operation fails. UI can subscribe to show warnings.
+    /// </summary>
+    public event EventHandler<SaveErrorEventArgs>? OnSaveError;
 
     public AutoDataSaver(ServiceData data, ILogger logger)
     {
@@ -27,7 +33,7 @@ public class AutoDataSaver : IDisposable
         _timer.AutoReset = true;
         _timer.Enabled = true;
         _timer.Start();
-        _logger.LogInformation("Auto-saved data saved in {TimerDuration} ms", TimerDuration);
+        _logger.LogInformation("Auto-save timer started with interval {TimerDuration}ms", TimerDuration);
     }
 
     /// <summary>
@@ -37,15 +43,15 @@ public class AutoDataSaver : IDisposable
     /// <param name="e"></param>
     private void SaveDataTimerEvent(object? source, ElapsedEventArgs e)
     {
-        // Handling with try catch to avoid the timer thread to crash:
         try
         {
             _data.SaveConfigToJson();
-            _logger.LogInformation("Auto-saved data saved - {timeStamp} ms", e.SignalTime);
+            _logger.LogInformation("Auto-saved data at {Timestamp}", e.SignalTime);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error saving data - {timestamp}",  DateTime.Now);
+            _logger.LogError(ex, "Error during auto-save at {Timestamp}", DateTime.Now);
+            OnSaveError?.Invoke(this, new SaveErrorEventArgs(ex, isCritical: false));
         }
     }
 
@@ -54,13 +60,23 @@ public class AutoDataSaver : IDisposable
     /// </summary>
     public void Dispose()
     {
-        // Save data before garbage collection:
-        _data.SaveConfigToJson();
-        
-        // Cleaning up timer instance
+        // Stop timer first to prevent concurrent saves
         _timer.Elapsed -= SaveDataTimerEvent;
         _timer.Stop();
         _timer.Dispose();
+
+        // Save data before garbage collection (critical - last chance to save)
+        try
+        {
+            _data.SaveConfigToJson();
+            _logger.LogInformation("Final save completed during dispose");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Critical error during final save on dispose");
+            OnSaveError?.Invoke(this, new SaveErrorEventArgs(ex, isCritical: true));
+        }
+
         _logger.LogInformation("Auto-Saver disposed");
     }
 }

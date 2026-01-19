@@ -19,6 +19,12 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     private readonly ServiceData _data;
     private readonly ILogger<EvalProService> _logger;
 
+    /// <summary>
+    /// Event raised when auto-save fails. UI can subscribe to show warnings to the user.
+    /// Check IsCritical property to determine if this was a final save attempt.
+    /// </summary>
+    public event EventHandler<SaveErrorEventArgs>? OnSaveError;
+
     public EvalProService()
     {
         Log.Logger = new LoggerConfiguration()
@@ -26,14 +32,15 @@ public class EvalProService : IEvalProServiceApi, IDisposable
             .WriteTo.Console()
             .WriteTo.File("evalpro.log", rollingInterval: RollingInterval.Hour)
             .CreateLogger();
-        
+
         _logger = LoggerFactory.Create(builder =>
         {
             builder.AddSerilog();
         }).CreateLogger<EvalProService>();
-        
+
         _data = new ServiceData(_logger);
         _autoDataSaver = new AutoDataSaver(_data, _logger);
+        _autoDataSaver.OnSaveError += (_, args) => OnSaveError?.Invoke(this, args);
         _autoDataSaver.StartAutoSaveTimer();
     }
 
