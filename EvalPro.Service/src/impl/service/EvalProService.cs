@@ -20,8 +20,8 @@ public class EvalProService : IEvalProServiceApi, IDisposable
 
     public EvalProService()
     {
-        _data = new ServiceData();
-        _autoDataSaver = new AutoDataSaver(_data);
+        _data = new ServiceData(_logger);
+        _autoDataSaver = new AutoDataSaver(_data, _logger);
         _autoDataSaver.StartAutoSaveTimer();
 
         Log.Logger = new LoggerConfiguration()

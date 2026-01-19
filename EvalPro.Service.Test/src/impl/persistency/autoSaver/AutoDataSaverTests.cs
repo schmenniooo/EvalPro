@@ -1,7 +1,9 @@
 using EvalProService.impl.model.entities;
 using EvalProService.impl.persistency;
 using EvalProService.impl.persistency.autoSaver;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using ServiceClass = EvalProService.impl.service.EvalProService;
 
 namespace EvalProServiceTest.impl.persistency.autoSaver;
 
@@ -21,8 +23,8 @@ public class AutoDataSaverTests : IDisposable
             File.Delete("config.json");
         }
 
-        _serviceData = new ServiceData();
-        _autoSaver = new AutoDataSaver(_serviceData);
+        _serviceData = new ServiceData(NullLogger<ServiceClass>.Instance);
+        _autoSaver = new AutoDataSaver(_serviceData, NullLogger<ServiceClass>.Instance);
     }
 
     [Fact]
@@ -60,7 +62,7 @@ public class AutoDataSaverTests : IDisposable
         Assert.True(File.Exists("config.json"), "Timer should have created config.json");
 
         // Verify content by loading
-        var loadedData = new ServiceData();
+        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
         var committees = loadedData.GetAllCommittees();
         Assert.Single(committees);
         Assert.Equal("Auto-saved Committee", committees[0].Designation);
@@ -82,7 +84,7 @@ public class AutoDataSaverTests : IDisposable
 
         // Assert - Should not crash, file should exist
         Assert.True(File.Exists("config.json"));
-        var loadedData = new ServiceData();
+        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
         Assert.Single(loadedData.GetAllCommittees());
     }
 
@@ -109,7 +111,7 @@ public class AutoDataSaverTests : IDisposable
         // Assert - File should exist with correct data
         Assert.True(File.Exists("config.json"));
 
-        var loadedData = new ServiceData();
+        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
         var committees = loadedData.GetAllCommittees();
         Assert.Single(committees);
         Assert.Equal("Final Committee", committees[0].Designation);
@@ -131,7 +133,7 @@ public class AutoDataSaverTests : IDisposable
         Thread.Sleep(SafeWaitTime);
 
         // Verify first save
-        var firstLoad = new ServiceData();
+        var firstLoad = new ServiceData(NullLogger<ServiceClass>.Instance);
         Assert.Single(firstLoad.GetAllCommittees());
 
         // Add more data
@@ -144,7 +146,7 @@ public class AutoDataSaverTests : IDisposable
         Thread.Sleep(SafeWaitTime); // Wait for second save
 
         // Assert - Both committees should be saved
-        var loadedData = new ServiceData();
+        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
         var committees = loadedData.GetAllCommittees();
         Assert.Equal(2, committees.Count);
         Assert.Equal("Initial Committee", committees[0].Designation);
@@ -177,7 +179,7 @@ public class AutoDataSaverTests : IDisposable
         Thread.Sleep(SafeWaitTime); // Wait for final save
 
         // Assert - All items should be saved
-        var loadedData = new ServiceData();
+        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
         Assert.Equal(4, loadedData.GetAllCommittees().Count); // 1 initial + 3 added
     }
 
@@ -227,7 +229,7 @@ public class AutoDataSaverTests : IDisposable
         Assert.True(File.Exists("config.json"));
 
         // Verify data is still being saved
-        var loadedData = new ServiceData();
+        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
         Assert.Single(loadedData.GetAllCommittees());
     }
 
@@ -247,7 +249,7 @@ public class AutoDataSaverTests : IDisposable
         // Assert - Should save empty lists without error
         Assert.True(File.Exists("config.json"));
 
-        var loadedData = new ServiceData();
+        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
         Assert.Empty(loadedData.GetAllCommittees());
         Assert.Empty(loadedData.GetAllExaminees());
     }

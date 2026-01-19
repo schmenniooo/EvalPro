@@ -1,4 +1,5 @@
 using System.Timers;
+using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
 
 namespace EvalProService.impl.persistency.autoSaver;
@@ -8,10 +9,12 @@ public class AutoDataSaver : IDisposable
     private const int TimerDuration = 500;
     private readonly Timer _timer = new(TimerDuration);
     private readonly ServiceData _data;
+    private readonly ILogger _logger;
 
-    public AutoDataSaver(ServiceData data)
+    public AutoDataSaver(ServiceData data, ILogger logger)
     {
         _data = data;
+        _logger = logger;
     }
 
     /// <summary>
@@ -24,6 +27,7 @@ public class AutoDataSaver : IDisposable
         _timer.AutoReset = true;
         _timer.Enabled = true;
         _timer.Start();
+        _logger.LogInformation("Auto-saved data saved in {TimerDuration} ms", TimerDuration);
     }
 
     /// <summary>
@@ -37,10 +41,11 @@ public class AutoDataSaver : IDisposable
         try
         {
             _data.SaveConfigToJson();
+            _logger.LogInformation("Auto-saved data saved - {timeStamp} ms", e.SignalTime);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Logging
+            _logger.LogError(ex, "Error saving data - {timestamp}",  DateTime.Now);
         }
     }
 
@@ -56,5 +61,6 @@ public class AutoDataSaver : IDisposable
         _timer.Elapsed -= SaveDataTimerEvent;
         _timer.Stop();
         _timer.Dispose();
+        _logger.LogInformation("Auto-Saver disposed");
     }
 }
