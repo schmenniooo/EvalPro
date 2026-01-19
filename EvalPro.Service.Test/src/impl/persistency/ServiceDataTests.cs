@@ -1,6 +1,8 @@
 using EvalProService.impl.model.entities;
 using EvalProService.impl.persistency;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using ServiceClass = EvalProService.impl.service.EvalProService;
 
 namespace EvalProServiceTest.impl.persistency;
 
@@ -17,7 +19,7 @@ public class ServiceDataTests : IDisposable
             File.Delete("config.json");
         }
 
-        _serviceData = new ServiceData();
+        _serviceData = new ServiceData(NullLogger<ServiceClass>.Instance);
     }
 
     [Fact]
@@ -63,7 +65,7 @@ public class ServiceDataTests : IDisposable
         Assert.True(File.Exists("config.json"));
 
         // Load and verify empty lists are preserved
-        var newServiceData = new ServiceData();
+        var newServiceData = new ServiceData(NullLogger<ServiceClass>.Instance);
         Assert.Empty(newServiceData.GetAllCommittees());
         Assert.Empty(newServiceData.GetAllExaminees());
     }
@@ -83,7 +85,7 @@ public class ServiceDataTests : IDisposable
 
         // Act - Save and create new instance to load
         _serviceData.SaveConfigToJson();
-        var newServiceData = new ServiceData();
+        var newServiceData = new ServiceData(NullLogger<ServiceClass>.Instance);
 
         // Assert - Check data was loaded correctly
         var committees = newServiceData.GetAllCommittees();
@@ -109,7 +111,7 @@ public class ServiceDataTests : IDisposable
 
         // Act
         _serviceData.SaveConfigToJson();
-        var newServiceData = new ServiceData();
+        var newServiceData = new ServiceData(NullLogger<ServiceClass>.Instance);
 
         // Assert
         var committees = newServiceData.GetAllCommittees();
@@ -154,7 +156,7 @@ public class ServiceDataTests : IDisposable
         Assert.True(File.Exists("config.json"));
 
         // Verify the saved data is still valid
-        var loadedData = new ServiceData();
+        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
         Assert.Single(loadedData.GetAllCommittees());
     }
 
@@ -165,7 +167,7 @@ public class ServiceDataTests : IDisposable
         File.WriteAllText("config.json", "{ this is not valid JSON }");
 
         // Act - Should not throw, just keep empty lists
-        var serviceData = new ServiceData();
+        var serviceData = new ServiceData(NullLogger<ServiceClass>.Instance);
 
         // Assert - Should have empty lists (error was caught and logged)
         Assert.Empty(serviceData.GetAllCommittees());
@@ -179,7 +181,7 @@ public class ServiceDataTests : IDisposable
         File.WriteAllText("config.json", "");
 
         // Act - Should not throw, just keep empty lists
-        var serviceData = new ServiceData();
+        var serviceData = new ServiceData(NullLogger<ServiceClass>.Instance);
 
         // Assert - Should have empty lists (error was caught and logged)
         Assert.Empty(serviceData.GetAllCommittees());
@@ -193,7 +195,7 @@ public class ServiceDataTests : IDisposable
         File.WriteAllText("config.json", "{}");
 
         // Act
-        var serviceData = new ServiceData();
+        var serviceData = new ServiceData(NullLogger<ServiceClass>.Instance);
 
         // Assert - All lists should be empty
         Assert.Empty(serviceData.GetAllCommittees());
