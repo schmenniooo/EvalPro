@@ -1,4 +1,4 @@
-namespace EvalProService.impl.exceptions;
+namespace EvalProService.impl.model.events;
 
 /// <summary>
 /// Event arguments for save error notifications

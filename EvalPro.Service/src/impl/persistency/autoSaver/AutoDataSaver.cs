@@ -1,5 +1,6 @@
 using System.Timers;
 using EvalProService.impl.exceptions;
+using EvalProService.impl.model.events;
 using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
 

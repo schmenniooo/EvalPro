@@ -1,6 +1,7 @@
 using EvalProService.api;
 using EvalProService.impl.exceptions;
 using EvalProService.impl.model.entities;
+using EvalProService.impl.model.events;
 using EvalProService.impl.model.ratings;
 using EvalProService.impl.persistency;
 using EvalProService.impl.persistency.autoSaver;
