@@ -15,7 +15,7 @@ public class ServiceData
     /// Used to handle Thread-Safety.
     /// </summary>
     private readonly Lock _lock = new();
-    private readonly ILogger? _logger;
+    private readonly ILogger _logger;
     private const string ConfigFilePath = "config.json";
     
     private List<AuditCommittee> _committeesList = [];
@@ -25,7 +25,7 @@ public class ServiceData
     private List<TechConversation> _projectTechConversationList = [];
     private List<SupplementaryExamination> _supplementaryExaminationList = [];
 
-    public ServiceData(ILogger? logger)
+    public ServiceData(ILogger logger)
     {
         _logger = logger;
         LoadConfigFromJson();
