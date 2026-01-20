@@ -1,8 +1,12 @@
 using EvalProService.api;
+using EvalProService.impl.exceptions;
 using EvalProService.impl.model.entities;
+using EvalProService.impl.model.events;
 using EvalProService.impl.model.ratings;
 using EvalProService.impl.persistency;
 using EvalProService.impl.persistency.autoSaver;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace EvalProService.impl.service;
 
@@ -14,11 +18,32 @@ public class EvalProService : IEvalProServiceApi, IDisposable
 {
     private readonly AutoDataSaver _autoDataSaver;
     private readonly ServiceData _data;
+    private readonly ILogger<EvalProService> _logger;
+    private readonly ILoggerFactory _loggerFactory;
+
+    /// <summary>
+    /// Event raised when auto-save fails. UI can subscribe to show warnings to the user.
+    /// Check IsCritical property to determine if this was a final save attempt.
+    /// </summary>
+    public event EventHandler<AutoSaveErrorEventArgs>? OnSaveError;
 
     public EvalProService()
     {
-        _data = new ServiceData();
-        _autoDataSaver = new AutoDataSaver(_data);
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .WriteTo.File("evalpro.log", rollingInterval: RollingInterval.Hour)
+            .CreateLogger();
+
+        _loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddSerilog();
+        });
+        _logger = _loggerFactory.CreateLogger<EvalProService>();
+
+        _data = new ServiceData(_logger);
+        _autoDataSaver = new AutoDataSaver(_data, _logger);
+        _autoDataSaver.OnSaveError += (_, args) => OnSaveError?.Invoke(this, args);
         _autoDataSaver.StartAutoSaveTimer();
     }
 
@@ -33,6 +58,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The newly created AuditCommittee object</returns>
     public AuditCommittee AddCommittee(string designation, string apprenticeShip, List<DateTime> testDates)
     {
+        _logger.LogInformation("Creating committee with: {Designation}, {ApprenticeShip}, {TestDates}", designation, apprenticeShip, testDates);
         var committee = new AuditCommittee(designation, apprenticeShip, testDates);
         _data.AddCommittee(committee);
         return committee;
@@ -45,25 +71,37 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <param name="designation"></param>
     /// <param name="apprenticeShip"></param>
     /// <param name="testDates"></param>
-    /// <returns>True if the committee was found and updated, false if not found</returns>
-    public bool UpdateCommittee(string id, string? designation = null, string? apprenticeShip = "", List<DateTime>? testDates = null)
+    /// <exception cref="EntityNotFoundException">Thrown when committee with given ID is not found</exception>
+    public void UpdateCommittee(string id, string? designation = null, string? apprenticeShip = null, List<DateTime>? testDates = null)
     {
-        return _data.UpdateCommittee(id, committee =>
+        _logger.LogInformation("Updating committee {Id}", id);
+        var result = _data.UpdateCommittee(id, committee =>
         {
             if (designation != null) committee.Designation = designation;
             if (apprenticeShip != null) committee.ApprenticeShip = apprenticeShip;
             if (testDates != null) committee.TestDates = testDates;
         });
+        if (!result)
+        {
+            _logger.LogWarning("Committee {Id} not found for update", id);
+            throw new EntityNotFoundException("Committee", id);
+        }
     }
 
     /// <summary>
     /// Deletes a committee object
     /// </summary>
     /// <param name="id"></param>
-    /// <returns>True if the committee was found and removed, false if not found</returns>
-    public bool RemoveCommittee(string id)
+    /// <exception cref="EntityNotFoundException">Thrown when committee with given ID is not found</exception>
+    public void RemoveCommittee(string id)
     {
-        return _data.RemoveCommittee(id);
+        _logger.LogInformation("Removing committee {Id}", id);
+        var result = _data.RemoveCommittee(id);
+        if (!result)
+        {
+            _logger.LogWarning("Committee {Id} not found for removal", id);
+            throw new EntityNotFoundException("Committee", id);
+        }
     }
 
     /// <summary>
@@ -73,6 +111,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The AuditCommittee object if found, null otherwise</returns>
     public AuditCommittee? GetCommitteeById(string id)
     {
+        _logger.LogInformation("Getting committee by id {Id}", id);
         return _data.GetCommitteeById(id);
     }
 
@@ -82,6 +121,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>A readonly list containing all AuditCommittee objects</returns>
     public IReadOnlyList<AuditCommittee> GetAllCommittees()
     {
+        _logger.LogInformation("Getting all committees");
         return _data.GetAllCommittees();
     }
 
@@ -97,6 +137,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The newly created Examinee object</returns>
     public Examinee AddExaminee(string name, string company, string contactPerson, string projectTitle)
     {
+        _logger.LogInformation("Creating examinee: {Name}, {Company}, {ContactPerson}, {ProjectTitle}", name, company, contactPerson, projectTitle);
         var examinee = new Examinee(name, company, contactPerson, projectTitle);
         _data.AddExaminee(examinee);
         return examinee;
@@ -110,36 +151,49 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <param name="company"></param>
     /// <param name="contactPerson"></param>
     /// <param name="projectTitle"></param>
-    /// <returns>True if the examinee was found and updated, false if not found</returns>
-    public bool UpdateExaminee(string id, string? name = null, string? company = null, string? contactPerson = null, string? projectTitle = null)
+    /// <exception cref="EntityNotFoundException">Thrown when examinee with given ID is not found</exception>
+    public void UpdateExaminee(string id, string? name = null, string? company = null, string? contactPerson = null, string? projectTitle = null)
     {
-        return _data.UpdateExaminee(id, examinee =>
+        _logger.LogInformation("Updating examinee {Id}", id);
+        var result = _data.UpdateExaminee(id, examinee =>
         {
             if (name != null) examinee.Name = name;
             if (company != null) examinee.Company = company;
             if (contactPerson != null) examinee.ContactPerson = contactPerson;
             if (projectTitle != null) examinee.ProjectTitle = projectTitle;
         });
+        if (!result)
+        {
+            _logger.LogWarning("Examinee {Id} not found for update", id);
+            throw new EntityNotFoundException("Examinee", id);
+        }
     }
 
     /// <summary>
     /// Searches for examinee object in committee's and deletes it's reference to the committee
     /// </summary>
     /// <param name="id"></param>
-    /// <returns>True if the examinee was found and removed, false if not found</returns>
-    public bool RemoveExaminee(string id)
+    /// <exception cref="EntityNotFoundException">Thrown when examinee with given ID is not found</exception>
+    public void RemoveExaminee(string id)
     {
+        _logger.LogInformation("Removing examinee {Id}", id);
         // First, remove from any committees that reference this examinee
         var committees = _data.GetAllCommittees();
         foreach (var committee in committees)
         {
             if (committee.ExamineeId == id)
             {
+                _logger.LogInformation("Removing examinee {ExamineeId} reference from committee {CommitteeId}", id, committee.Id);
                 _data.UpdateCommittee(committee.Id, c => c.ExamineeId = null);
             }
         }
 
-        return _data.RemoveExaminee(id);
+        var result = _data.RemoveExaminee(id);
+        if (!result)
+        {
+            _logger.LogWarning("Examinee {Id} not found for removal", id);
+            throw new EntityNotFoundException("Examinee", id);
+        }
     }
 
     /// <summary>
@@ -149,6 +203,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The Examinee object if found, null otherwise</returns>
     public Examinee? GetExamineeById(string id)
     {
+        _logger.LogInformation("Getting examinee by id {Id}", id);
         return _data.GetExamineeById(id);
     }
 
@@ -158,6 +213,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>A readonly list containing all Examinee objects</returns>
     public IReadOnlyList<Examinee> GetAllExaminees()
     {
+        _logger.LogInformation("Getting all examinees");
         return _data.GetAllExaminees();
     }
 
@@ -166,30 +222,46 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <summary>
     /// Connects an examinee to a committee by setting the ID reference
     /// </summary>
-    /// <returns>True if the assignment succeeded, false if examinee or committee not found</returns>
-    public bool AssignExamineeToCommittee(string committeeId, string examineeId)
+    /// <exception cref="EntityNotFoundException">Thrown when examinee or committee is not found</exception>
+    public void AssignExamineeToCommittee(string committeeId, string examineeId)
     {
+        _logger.LogInformation("Assigning examinee {ExamineeId} to committee {CommitteeId}", examineeId, committeeId);
         // Verify examinee exists
         var examinee = _data.GetExamineeById(examineeId);
-        if (examinee == null) return false;
+        if (examinee == null)
+        {
+            _logger.LogWarning("Examinee {ExamineeId} not found for assignment", examineeId);
+            throw new EntityNotFoundException("Examinee", examineeId);
+        }
 
         // Set the relationship
-        return _data.UpdateCommittee(committeeId, committee =>
+        var result = _data.UpdateCommittee(committeeId, committee =>
         {
             committee.ExamineeId = examineeId;
         });
+        if (!result)
+        {
+            _logger.LogWarning("Committee {CommitteeId} not found for assignment", committeeId);
+            throw new EntityNotFoundException("Committee", committeeId);
+        }
     }
 
     /// <summary>
     /// Removes the examinee from a committee
     /// </summary>
-    /// <returns>True if the committee was found and the examinee reference was cleared, false if committee not found</returns>
-    public bool RemoveExamineeFromCommittee(string committeeId)
+    /// <exception cref="EntityNotFoundException">Thrown when committee is not found</exception>
+    public void RemoveExamineeFromCommittee(string committeeId)
     {
-        return _data.UpdateCommittee(committeeId, committee =>
+        _logger.LogInformation("Removing examinee from committee {CommitteeId}", committeeId);
+        var result = _data.UpdateCommittee(committeeId, committee =>
         {
             committee.ExamineeId = null;
         });
+        if (!result)
+        {
+            _logger.LogWarning("Committee {CommitteeId} not found", committeeId);
+            throw new EntityNotFoundException("Committee", committeeId);
+        }
     }
 
     /// <summary>
@@ -198,6 +270,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The Examinee object if found and assigned to the committee, null otherwise</returns>
     public Examinee? GetExamineeForCommittee(string committeeId)
     {
+        _logger.LogInformation("Getting examinee for committee {CommitteeId}", committeeId);
         var committee = _data.GetCommitteeById(committeeId);
         if (committee?.ExamineeId == null) return null;
 
@@ -210,6 +283,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The AuditCommittee object if the examinee is assigned to one, null otherwise</returns>
     public AuditCommittee? GetCommitteeForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting committee for examinee {ExamineeId}", examineeId);
         var committees = _data.GetAllCommittees();
         return committees.FirstOrDefault(c => c.ExamineeId == examineeId);
     }
@@ -221,12 +295,20 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// </summary>
     /// <param name="examineeId"></param>
     /// <param name="documentation"></param>
-    /// <returns>True if the assignment succeeded, false if examinee not found</returns>
-    public bool AssignProjectDocumentation(string examineeId, ProjectDocumentation documentation)
+    /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
+    public void AssignProjectDocumentation(string examineeId, ProjectDocumentation documentation)
     {
-        _data.AddProjectDocumentation(documentation);
+        _logger.LogInformation("Assigning project documentation {DocumentationId} to examinee {ExamineeId}", documentation.Id, examineeId);
 
-        return _data.UpdateExaminee(examineeId, examinee =>
+        // Verify examinee exists before adding documentation to prevent orphaned data
+        if (_data.GetExamineeById(examineeId) == null)
+        {
+            _logger.LogWarning("Examinee {ExamineeId} not found for documentation assignment", examineeId);
+            throw new EntityNotFoundException("Examinee", examineeId);
+        }
+
+        _data.AddProjectDocumentation(documentation);
+        _data.UpdateExaminee(examineeId, examinee =>
         {
             examinee.ProjectDocumentationId = documentation.Id;
         });
@@ -239,6 +321,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The ProjectDocumentation object if found and assigned to the examinee, null otherwise</returns>
     public ProjectDocumentation? GetProjectDocumentationForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting project documentation for examinee {ExamineeId}", examineeId);
         var examinee = _data.GetExamineeById(examineeId);
         if (examinee?.ProjectDocumentationId == null) return null;
 
@@ -250,12 +333,20 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// </summary>
     /// <param name="examineeId"></param>
     /// <param name="presentation"></param>
-    /// <returns>True if the assignment succeeded, false if examinee not found</returns>
-    public bool AssignProjectPresentation(string examineeId, ProjectPresentation presentation)
+    /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
+    public void AssignProjectPresentation(string examineeId, ProjectPresentation presentation)
     {
-        _data.AddProjectPresentation(presentation);
+        _logger.LogInformation("Assigning project presentation {PresentationId} to examinee {ExamineeId}", presentation.Id, examineeId);
 
-        return _data.UpdateExaminee(examineeId, examinee =>
+        // Verify examinee exists before adding presentation to prevent orphaned data
+        if (_data.GetExamineeById(examineeId) == null)
+        {
+            _logger.LogWarning("Examinee {ExamineeId} not found for presentation assignment", examineeId);
+            throw new EntityNotFoundException("Examinee", examineeId);
+        }
+
+        _data.AddProjectPresentation(presentation);
+        _data.UpdateExaminee(examineeId, examinee =>
         {
             examinee.ProjectPresentationId = presentation.Id;
         });
@@ -268,6 +359,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The ProjectPresentation object if found and assigned to the examinee, null otherwise</returns>
     public ProjectPresentation? GetProjectPresentationForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting project presentation for examinee {ExamineeId}", examineeId);
         var examinee = _data.GetExamineeById(examineeId);
         if (examinee?.ProjectPresentationId == null) return null;
 
@@ -279,12 +371,20 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// </summary>
     /// <param name="examineeId"></param>
     /// <param name="conversation"></param>
-    /// <returns>True if the assignment succeeded, false if examinee not found</returns>
-    public bool AssignTechConversation(string examineeId, TechConversation conversation)
+    /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
+    public void AssignTechConversation(string examineeId, TechConversation conversation)
     {
-        _data.AddTechConversation(conversation);
+        _logger.LogInformation("Assigning tech conversation {ConversationId} to examinee {ExamineeId}", conversation.Id, examineeId);
 
-        return _data.UpdateExaminee(examineeId, examinee =>
+        // Verify examinee exists before adding conversation to prevent orphaned data
+        if (_data.GetExamineeById(examineeId) == null)
+        {
+            _logger.LogWarning("Examinee {ExamineeId} not found for tech conversation assignment", examineeId);
+            throw new EntityNotFoundException("Examinee", examineeId);
+        }
+
+        _data.AddTechConversation(conversation);
+        _data.UpdateExaminee(examineeId, examinee =>
         {
             examinee.TechConversationId = conversation.Id;
         });
@@ -297,6 +397,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The TechConversation object if found and assigned to the examinee, null otherwise</returns>
     public TechConversation? GetTechConversationForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting tech conversation for examinee {ExamineeId}", examineeId);
         var examinee = _data.GetExamineeById(examineeId);
         if (examinee?.TechConversationId == null) return null;
 
@@ -308,12 +409,20 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// </summary>
     /// <param name="examineeId"></param>
     /// <param name="exam"></param>
-    /// <returns>True if the assignment succeeded, false if examinee not found</returns>
-    public bool AssignSupplementaryExamination(string examineeId, SupplementaryExamination exam)
+    /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
+    public void AssignSupplementaryExamination(string examineeId, SupplementaryExamination exam)
     {
-        _data.AddSupplementaryExamination(exam);
+        _logger.LogInformation("Assigning supplementary examination {ExamId} to examinee {ExamineeId}", exam.Id, examineeId);
 
-        return _data.UpdateExaminee(examineeId, examinee =>
+        // Verify examinee exists before adding examination to prevent orphaned data
+        if (_data.GetExamineeById(examineeId) == null)
+        {
+            _logger.LogWarning("Examinee {ExamineeId} not found for supplementary examination assignment", examineeId);
+            throw new EntityNotFoundException("Examinee", examineeId);
+        }
+
+        _data.AddSupplementaryExamination(exam);
+        _data.UpdateExaminee(examineeId, examinee =>
         {
             examinee.SupplementaryExaminationId = exam.Id;
         });
@@ -326,6 +435,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <returns>The SupplementaryExamination object if found and assigned to the examinee, null otherwise</returns>
     public SupplementaryExamination? GetSupplementaryExaminationForExaminee(string examineeId)
     {
+        _logger.LogInformation("Getting supplementary examination for examinee {ExamineeId}", examineeId);
         var examinee = _data.GetExamineeById(examineeId);
         if (examinee?.SupplementaryExaminationId == null) return null;
 
@@ -338,5 +448,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void Dispose()
     {
         _autoDataSaver.Dispose();
+        _loggerFactory.Dispose();
+        Log.CloseAndFlush();
     }
 }
