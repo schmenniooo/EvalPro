@@ -19,6 +19,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     private readonly AutoDataSaver _autoDataSaver;
     private readonly ServiceData _data;
     private readonly ILogger<EvalProService> _logger;
+    private readonly ILoggerFactory _loggerFactory;
 
     /// <summary>
     /// Event raised when auto-save fails. UI can subscribe to show warnings to the user.
@@ -34,10 +35,11 @@ public class EvalProService : IEvalProServiceApi, IDisposable
             .WriteTo.File("evalpro.log", rollingInterval: RollingInterval.Hour)
             .CreateLogger();
 
-        _logger = LoggerFactory.Create(builder =>
+        _loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.AddSerilog();
-        }).CreateLogger<EvalProService>();
+        });
+        _logger = _loggerFactory.CreateLogger<EvalProService>();
 
         _data = new ServiceData(_logger);
         _autoDataSaver = new AutoDataSaver(_data, _logger);
@@ -297,17 +299,19 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void AssignProjectDocumentation(string examineeId, ProjectDocumentation documentation)
     {
         _logger.LogInformation("Assigning project documentation {DocumentationId} to examinee {ExamineeId}", documentation.Id, examineeId);
-        _data.AddProjectDocumentation(documentation);
 
-        var result = _data.UpdateExaminee(examineeId, examinee =>
-        {
-            examinee.ProjectDocumentationId = documentation.Id;
-        });
-        if (!result)
+        // Verify examinee exists before adding documentation to prevent orphaned data
+        if (_data.GetExamineeById(examineeId) == null)
         {
             _logger.LogWarning("Examinee {ExamineeId} not found for documentation assignment", examineeId);
             throw new EntityNotFoundException("Examinee", examineeId);
         }
+
+        _data.AddProjectDocumentation(documentation);
+        _data.UpdateExaminee(examineeId, examinee =>
+        {
+            examinee.ProjectDocumentationId = documentation.Id;
+        });
     }
 
     /// <summary>
@@ -333,17 +337,19 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void AssignProjectPresentation(string examineeId, ProjectPresentation presentation)
     {
         _logger.LogInformation("Assigning project presentation {PresentationId} to examinee {ExamineeId}", presentation.Id, examineeId);
-        _data.AddProjectPresentation(presentation);
 
-        var result = _data.UpdateExaminee(examineeId, examinee =>
-        {
-            examinee.ProjectPresentationId = presentation.Id;
-        });
-        if (!result)
+        // Verify examinee exists before adding presentation to prevent orphaned data
+        if (_data.GetExamineeById(examineeId) == null)
         {
             _logger.LogWarning("Examinee {ExamineeId} not found for presentation assignment", examineeId);
             throw new EntityNotFoundException("Examinee", examineeId);
         }
+
+        _data.AddProjectPresentation(presentation);
+        _data.UpdateExaminee(examineeId, examinee =>
+        {
+            examinee.ProjectPresentationId = presentation.Id;
+        });
     }
 
     /// <summary>
@@ -369,17 +375,19 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void AssignTechConversation(string examineeId, TechConversation conversation)
     {
         _logger.LogInformation("Assigning tech conversation {ConversationId} to examinee {ExamineeId}", conversation.Id, examineeId);
-        _data.AddTechConversation(conversation);
 
-        var result = _data.UpdateExaminee(examineeId, examinee =>
-        {
-            examinee.TechConversationId = conversation.Id;
-        });
-        if (!result)
+        // Verify examinee exists before adding conversation to prevent orphaned data
+        if (_data.GetExamineeById(examineeId) == null)
         {
             _logger.LogWarning("Examinee {ExamineeId} not found for tech conversation assignment", examineeId);
             throw new EntityNotFoundException("Examinee", examineeId);
         }
+
+        _data.AddTechConversation(conversation);
+        _data.UpdateExaminee(examineeId, examinee =>
+        {
+            examinee.TechConversationId = conversation.Id;
+        });
     }
 
     /// <summary>
@@ -405,17 +413,19 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void AssignSupplementaryExamination(string examineeId, SupplementaryExamination exam)
     {
         _logger.LogInformation("Assigning supplementary examination {ExamId} to examinee {ExamineeId}", exam.Id, examineeId);
-        _data.AddSupplementaryExamination(exam);
 
-        var result = _data.UpdateExaminee(examineeId, examinee =>
-        {
-            examinee.SupplementaryExaminationId = exam.Id;
-        });
-        if (!result)
+        // Verify examinee exists before adding examination to prevent orphaned data
+        if (_data.GetExamineeById(examineeId) == null)
         {
             _logger.LogWarning("Examinee {ExamineeId} not found for supplementary examination assignment", examineeId);
             throw new EntityNotFoundException("Examinee", examineeId);
         }
+
+        _data.AddSupplementaryExamination(exam);
+        _data.UpdateExaminee(examineeId, examinee =>
+        {
+            examinee.SupplementaryExaminationId = exam.Id;
+        });
     }
 
     /// <summary>
@@ -438,6 +448,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void Dispose()
     {
         _autoDataSaver.Dispose();
+        _loggerFactory.Dispose();
         Log.CloseAndFlush();
     }
 }
