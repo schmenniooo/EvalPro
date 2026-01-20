@@ -1,6 +1,7 @@
 using System.Text.Json;
 using EvalProService.impl.model.entities;
 using EvalProService.impl.model.ratings;
+using Microsoft.Extensions.Logging;
 
 namespace EvalProService.impl.persistency;
 
@@ -14,6 +15,7 @@ public class ServiceData
     /// Used to handle Thread-Safety.
     /// </summary>
     private readonly Lock _lock = new();
+    private readonly ILogger _logger;
     private const string ConfigFilePath = "config.json";
     
     private List<AuditCommittee> _committeesList = [];
@@ -23,8 +25,9 @@ public class ServiceData
     private List<TechConversation> _projectTechConversationList = [];
     private List<SupplementaryExamination> _supplementaryExaminationList = [];
 
-    public ServiceData()
+    public ServiceData(ILogger logger)
     {
+        _logger = logger;
         LoadConfigFromJson();
     }
 
@@ -33,6 +36,7 @@ public class ServiceData
     /// </summary>
     public void SaveConfigToJson()
     {
+        _logger.LogInformation("Saving config to {FilePath}", ConfigFilePath);
         // Capture snapshot while locked (fast)
         var data = CreateSnapshot();
 
@@ -44,6 +48,7 @@ public class ServiceData
 
         var jsonString = JsonSerializer.Serialize(data, options);
         File.WriteAllText(ConfigFilePath, jsonString);
+        _logger.LogInformation("Config saved successfully");
     }
     
     /// <summary>
@@ -51,8 +56,10 @@ public class ServiceData
     /// </summary>
     private void LoadConfigFromJson()
     {
+        _logger.LogInformation("Loading config from {FilePath}", ConfigFilePath);
         if (!File.Exists(ConfigFilePath))
         {
+            _logger.LogInformation("Config file not found, creating new file");
             File.Create(ConfigFilePath).Dispose();
             return;
         }
@@ -101,14 +108,16 @@ public class ServiceData
                 if (techConv != null) _projectTechConversationList = techConv;
                 if (suppExam != null) _supplementaryExaminationList = suppExam;
             }
+            _logger.LogInformation("Config loaded successfully: {CommitteeCount} committees, {ExamineeCount} examinees",
+                _committeesList.Count, _examineesList.Count);
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            // Logging - malformed JSON, keep existing data
+            _logger.LogError(ex, "Failed to parse config file - malformed JSON");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Logging - other errors (file access, etc.), keep existing data
+            _logger.LogError(ex, "Failed to load config file");
         }
     }
     
@@ -148,6 +157,7 @@ public class ServiceData
             committee.CreatedAt = DateTime.Now;
             committee.UpdatedAt = DateTime.Now;
             _committeesList.Add(committee);
+            _logger.LogInformation("Added committee {Id} to data store", committee.Id);
         }
     }
 
@@ -162,10 +172,15 @@ public class ServiceData
         lock (_lock)
         {
             var committee = _committeesList.FirstOrDefault(c => c.Id == id);
-            if (committee == null) return false;
+            if (committee == null)
+            {
+                _logger.LogWarning("Committee {Id} not found in data store", id);
+                return false;
+            }
 
             updateAction(committee);
             committee.UpdatedAt = DateTime.Now;
+            _logger.LogInformation("Updated committee {Id} in data store", id);
             return true;
         }
     }
@@ -180,7 +195,14 @@ public class ServiceData
         lock (_lock)
         {
             var committee = _committeesList.FirstOrDefault(c => c.Id == id);
-            return committee != null && _committeesList.Remove(committee);
+            if (committee == null)
+            {
+                _logger.LogWarning("Committee {Id} not found in data store for removal", id);
+                return false;
+            }
+            _committeesList.Remove(committee);
+            _logger.LogInformation("Removed committee {Id} from data store", id);
+            return true;
         }
     }
 
@@ -222,6 +244,7 @@ public class ServiceData
             examinee.CreatedAt = DateTime.Now;
             examinee.UpdatedAt = DateTime.Now;
             _examineesList.Add(examinee);
+            _logger.LogInformation("Added examinee {Id} to data store", examinee.Id);
         }
     }
 
@@ -236,10 +259,15 @@ public class ServiceData
         lock (_lock)
         {
             var examinee = _examineesList.FirstOrDefault(e => e.Id == id);
-            if (examinee == null) return false;
+            if (examinee == null)
+            {
+                _logger.LogWarning("Examinee {Id} not found in data store", id);
+                return false;
+            }
 
             updateAction(examinee);
             examinee.UpdatedAt = DateTime.Now;
+            _logger.LogInformation("Updated examinee {Id} in data store", id);
             return true;
         }
     }
@@ -254,7 +282,14 @@ public class ServiceData
         lock (_lock)
         {
             var examinee = _examineesList.FirstOrDefault(e => e.Id == id);
-            return examinee != null && _examineesList.Remove(examinee);
+            if (examinee == null)
+            {
+                _logger.LogWarning("Examinee {Id} not found in data store for removal", id);
+                return false;
+            }
+            _examineesList.Remove(examinee);
+            _logger.LogInformation("Removed examinee {Id} from data store", id);
+            return true;
         }
     }
 
@@ -296,6 +331,7 @@ public class ServiceData
             doc.CreatedAt = DateTime.Now;
             doc.UpdatedAt = DateTime.Now;
             _projectDocumentationList.Add(doc);
+            _logger.LogInformation("Added project documentation {Id} to data store", doc.Id);
         }
     }
 
@@ -325,6 +361,7 @@ public class ServiceData
             presentation.CreatedAt = DateTime.Now;
             presentation.UpdatedAt = DateTime.Now;
             _projectPresentationList.Add(presentation);
+            _logger.LogInformation("Added project presentation {Id} to data store", presentation.Id);
         }
     }
 
@@ -354,6 +391,7 @@ public class ServiceData
             conversation.CreatedAt = DateTime.Now;
             conversation.UpdatedAt = DateTime.Now;
             _projectTechConversationList.Add(conversation);
+            _logger.LogInformation("Added tech conversation {Id} to data store", conversation.Id);
         }
     }
 
@@ -383,6 +421,7 @@ public class ServiceData
             exam.CreatedAt = DateTime.Now;
             exam.UpdatedAt = DateTime.Now;
             _supplementaryExaminationList.Add(exam);
+            _logger.LogInformation("Added supplementary examination {Id} to data store", exam.Id);
         }
     }
 
