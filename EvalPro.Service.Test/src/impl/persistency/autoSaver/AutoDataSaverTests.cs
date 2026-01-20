@@ -1,4 +1,5 @@
 using EvalProService.impl.model.entities;
+using EvalProService.impl.model.events;
 using EvalProService.impl.persistency;
 using EvalProService.impl.persistency.autoSaver;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -252,6 +253,130 @@ public class AutoDataSaverTests : IDisposable
         var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
         Assert.Empty(loadedData.GetAllCommittees());
         Assert.Empty(loadedData.GetAllExaminees());
+    }
+
+    [Fact]
+    public void OnSaveError_WhenTimerSaveFails_RaisesEventWithIsCriticalFalse()
+    {
+        // Arrange
+        AutoSaveErrorEventArgs? receivedArgs = null;
+        _autoSaver.OnSaveError += (_, args) => receivedArgs = args;
+
+        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
+        _serviceData.AddCommittee(committee);
+
+        // Make the config file read-only to trigger a save error
+        _serviceData.SaveConfigToJson(); // Create the file first
+        File.SetAttributes("config.json", FileAttributes.ReadOnly);
+
+        try
+        {
+            // Act - Start timer which will try to save and fail
+            _autoSaver.StartAutoSaveTimer();
+            Thread.Sleep(SafeWaitTime);
+
+            // Assert - Event should have been raised with IsCritical = false
+            Assert.NotNull(receivedArgs);
+            Assert.False(receivedArgs.IsCritical);
+            Assert.NotNull(receivedArgs.Exception);
+            Assert.True(receivedArgs.Timestamp <= DateTime.Now);
+        }
+        finally
+        {
+            // Cleanup - Remove read-only attribute
+            File.SetAttributes("config.json", FileAttributes.Normal);
+        }
+    }
+
+    [Fact]
+    public void OnSaveError_WhenDisposeSaveFails_RaisesEventWithIsCriticalTrue()
+    {
+        // Arrange
+        AutoSaveErrorEventArgs? receivedArgs = null;
+        var localServiceData = new ServiceData(NullLogger<ServiceClass>.Instance);
+        var localAutoSaver = new AutoDataSaver(localServiceData, NullLogger<ServiceClass>.Instance);
+        localAutoSaver.OnSaveError += (_, args) => receivedArgs = args;
+
+        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
+        localServiceData.AddCommittee(committee);
+
+        // Make the config file read-only to trigger a save error
+        localServiceData.SaveConfigToJson(); // Create the file first
+        File.SetAttributes("config.json", FileAttributes.ReadOnly);
+
+        try
+        {
+            // Act - Dispose will try to save and fail
+            localAutoSaver.Dispose();
+
+            // Assert - Event should have been raised with IsCritical = true
+            Assert.NotNull(receivedArgs);
+            Assert.True(receivedArgs.IsCritical);
+            Assert.NotNull(receivedArgs.Exception);
+        }
+        finally
+        {
+            // Cleanup - Remove read-only attribute
+            File.SetAttributes("config.json", FileAttributes.Normal);
+        }
+    }
+
+    [Fact]
+    public void OnSaveError_EventContainsTimestamp()
+    {
+        // Arrange
+        AutoSaveErrorEventArgs? receivedArgs = null;
+        var localServiceData = new ServiceData(NullLogger<ServiceClass>.Instance);
+        var localAutoSaver = new AutoDataSaver(localServiceData, NullLogger<ServiceClass>.Instance);
+        localAutoSaver.OnSaveError += (_, args) => receivedArgs = args;
+
+        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
+        localServiceData.AddCommittee(committee);
+
+        localServiceData.SaveConfigToJson();
+        File.SetAttributes("config.json", FileAttributes.ReadOnly);
+
+        var beforeDispose = DateTime.Now;
+
+        try
+        {
+            // Act
+            localAutoSaver.Dispose();
+
+            // Assert
+            Assert.NotNull(receivedArgs);
+            Assert.True(receivedArgs.Timestamp >= beforeDispose);
+            Assert.True(receivedArgs.Timestamp <= DateTime.Now);
+        }
+        finally
+        {
+            File.SetAttributes("config.json", FileAttributes.Normal);
+        }
+    }
+
+    [Fact]
+    public void OnSaveError_WhenNoSubscribers_DoesNotThrow()
+    {
+        // Arrange - Don't subscribe to the event
+        var localServiceData = new ServiceData(NullLogger<ServiceClass>.Instance);
+        var localAutoSaver = new AutoDataSaver(localServiceData, NullLogger<ServiceClass>.Instance);
+
+        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
+        localServiceData.AddCommittee(committee);
+
+        localServiceData.SaveConfigToJson();
+        File.SetAttributes("config.json", FileAttributes.ReadOnly);
+
+        try
+        {
+            // Act & Assert - Should not throw even without subscribers
+            var exception = Record.Exception(() => localAutoSaver.Dispose());
+            Assert.Null(exception);
+        }
+        finally
+        {
+            File.SetAttributes("config.json", FileAttributes.Normal);
+        }
     }
 
     public void Dispose()
