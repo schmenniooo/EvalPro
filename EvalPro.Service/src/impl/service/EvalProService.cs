@@ -70,7 +70,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <param name="apprenticeShip"></param>
     /// <param name="testDates"></param>
     /// <exception cref="EntityNotFoundException">Thrown when committee with given ID is not found</exception>
-    public void UpdateCommittee(string id, string? designation = null, string? apprenticeShip = "", List<DateTime>? testDates = null)
+    public void UpdateCommittee(string id, string? designation = null, string? apprenticeShip = null, List<DateTime>? testDates = null)
     {
         _logger.LogInformation("Updating committee {Id}", id);
         var result = _data.UpdateCommittee(id, committee =>

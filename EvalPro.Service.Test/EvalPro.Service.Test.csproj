@@ -28,7 +28,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="src\api\" />
       <Folder Include="src\impl\persistency\autoSaver\" />
       <Folder Include="src\impl\service\" />
     </ItemGroup>
