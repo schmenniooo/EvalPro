@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace WPFApp1
+namespace EvalProUI
 {
     public partial class MainWindow : Window
     {
@@ -11,9 +11,10 @@ namespace WPFApp1
         }
 
         // WICHTIG: public PROPERTY, kein Feld!
+        // Gefixt: Rückgabe war rekursiv und hat zu StackOverflow geführt.
         public string GreetingName
         {
-            get { return $"Guten Morgen, {GreetingName}"; }
+            get { return $"Guten Morgen, Benutzer"; }
         }
     }
 }

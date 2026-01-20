@@ -1,5 +1,8 @@
 namespace EvalProUI;
 
+using System;
+using System.Windows;
+
 static class Program
 {
     /// <summary>
@@ -8,6 +11,8 @@ static class Program
     [STAThread]
     static void Main()
     {
-        
+        var app = new Application();
+        var main = new MainWindow();
+        app.Run(main);
     }
 }
