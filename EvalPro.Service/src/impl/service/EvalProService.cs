@@ -1,9 +1,9 @@
+using System.Text.Json;
 using EvalProService.api;
 using EvalProService.impl.exceptions;
 using EvalProService.impl.model.entities;
 using EvalProService.impl.model.events;
 using EvalProService.impl.model.ratings;
-using EvalProService.impl.persistency;
 using EvalProService.impl.persistency.autoSaver;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -11,15 +11,23 @@ using Serilog;
 namespace EvalProService.impl.service;
 
 /// <summary>
-/// Service layer that manages business logic and relationships between entities
-/// Frontend interacts only with this class
+/// Service layer that manages business logic, data storage, and persistence.
+/// Frontend interacts only with this class.
 /// </summary>
 public class EvalProService : IEvalProServiceApi, IDisposable
 {
+    private readonly Lock _lock = new();
     private readonly AutoDataSaver _autoDataSaver;
-    private readonly ServiceData _data;
     private readonly ILogger<EvalProService> _logger;
     private readonly ILoggerFactory _loggerFactory;
+    private const string ConfigFilePath = "config.json";
+
+    private List<AuditCommittee> _committeesList = [];
+    private List<Examinee> _examineesList = [];
+    private List<ProjectDocumentation> _projectDocumentationList = [];
+    private List<ProjectPresentation> _projectPresentationList = [];
+    private List<TechConversation> _projectTechConversationList = [];
+    private List<SupplementaryExamination> _supplementaryExaminationList = [];
 
     /// <summary>
     /// Event raised when auto-save fails. UI can subscribe to show warnings to the user.
@@ -41,88 +49,189 @@ public class EvalProService : IEvalProServiceApi, IDisposable
         });
         _logger = _loggerFactory.CreateLogger<EvalProService>();
 
-        _data = new ServiceData(_logger);
-        _autoDataSaver = new AutoDataSaver(_data, _logger);
+        LoadConfigFromJson();
+        _autoDataSaver = new AutoDataSaver(SaveConfigToJson, _logger);
         _autoDataSaver.OnSaveError += (_, args) => OnSaveError?.Invoke(this, args);
         _autoDataSaver.StartAutoSaveTimer();
     }
 
+    // ===== Persistence =====
+
+    /// <summary>
+    /// Writes current attribute values into local json files
+    /// </summary>
+    public void SaveConfigToJson()
+    {
+        _logger.LogInformation("Saving config to {FilePath}", ConfigFilePath);
+        // Capture snapshot while locked (fast)
+        object data;
+        lock (_lock)
+        {
+            data = new
+            {
+                Committees = _committeesList.ToList(),
+                Examinees = _examineesList.ToList(),
+                ProjectDocumentation = _projectDocumentationList.ToList(),
+                ProjectPresentation = _projectPresentationList.ToList(),
+                TechConversation = _projectTechConversationList.ToList(),
+                SupplementaryExamination = _supplementaryExaminationList.ToList()
+            };
+        }
+
+        // Serialize and write to disk without lock (slow I/O)
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        var jsonString = JsonSerializer.Serialize(data, options);
+        File.WriteAllText(ConfigFilePath, jsonString);
+        _logger.LogInformation("Config saved successfully");
+    }
+
+    /// <summary>
+    /// Reads values from json files
+    /// </summary>
+    private void LoadConfigFromJson()
+    {
+        _logger.LogInformation("Loading config from {FilePath}", ConfigFilePath);
+        if (!File.Exists(ConfigFilePath))
+        {
+            _logger.LogInformation("Config file not found, creating new file");
+            File.Create(ConfigFilePath).Dispose();
+            return;
+        }
+
+        try
+        {
+            var jsonString = File.ReadAllText(ConfigFilePath);
+            using var document = JsonDocument.Parse(jsonString);
+            var root = document.RootElement;
+
+            var committees = root.TryGetProperty("Committees", out JsonElement committeesElement)
+                ? JsonSerializer.Deserialize<List<AuditCommittee>>(committeesElement.GetRawText()) ?? []
+                : null;
+
+            var examinees = root.TryGetProperty("Examinees", out JsonElement examineesElement)
+                ? JsonSerializer.Deserialize<List<Examinee>>(examineesElement.GetRawText()) ?? []
+                : null;
+
+            var projectDocs = root.TryGetProperty("ProjectDocumentation", out JsonElement projectDocElement)
+                ? JsonSerializer.Deserialize<List<ProjectDocumentation>>(projectDocElement.GetRawText()) ?? []
+                : null;
+
+            var projectPres = root.TryGetProperty("ProjectPresentation", out JsonElement projectPresElement)
+                ? JsonSerializer.Deserialize<List<ProjectPresentation>>(projectPresElement.GetRawText()) ?? []
+                : null;
+
+            var techConv = root.TryGetProperty("TechConversation", out JsonElement techConvElement)
+                ? JsonSerializer.Deserialize<List<TechConversation>>(techConvElement.GetRawText()) ?? []
+                : null;
+
+            var suppExam = root.TryGetProperty("SupplementaryExamination", out JsonElement suppExamElement)
+                ? JsonSerializer.Deserialize<List<SupplementaryExamination>>(suppExamElement.GetRawText()) ?? []
+                : null;
+
+            lock (_lock)
+            {
+                if (committees != null) _committeesList = committees;
+                if (examinees != null) _examineesList = examinees;
+                if (projectDocs != null) _projectDocumentationList = projectDocs;
+                if (projectPres != null) _projectPresentationList = projectPres;
+                if (techConv != null) _projectTechConversationList = techConv;
+                if (suppExam != null) _supplementaryExaminationList = suppExam;
+            }
+            _logger.LogInformation("Config loaded successfully: {CommitteeCount} committees, {ExamineeCount} examinees",
+                _committeesList.Count, _examineesList.Count);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse config file - malformed JSON");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load config file");
+        }
+    }
+
     // ===== Committee Operations =====
-    
+
     /// <summary>
     /// Creates a new committee object with given parameters
     /// </summary>
-    /// <param name="designation"></param>
-    /// <param name="apprenticeShip"></param>
-    /// <param name="testDates"></param>
-    /// <returns>The newly created AuditCommittee object</returns>
     public AuditCommittee AddCommittee(string designation, string apprenticeShip, List<DateTime> testDates)
     {
         _logger.LogInformation("Creating committee with: {Designation}, {ApprenticeShip}, {TestDates}", designation, apprenticeShip, testDates);
         var committee = new AuditCommittee(designation, apprenticeShip, testDates);
-        _data.AddCommittee(committee);
+        lock (_lock)
+        {
+            committee.CreatedAt = DateTime.Now;
+            committee.UpdatedAt = DateTime.Now;
+            _committeesList.Add(committee);
+        }
         return committee;
     }
 
     /// <summary>
     /// Updates a committee object by id
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="designation"></param>
-    /// <param name="apprenticeShip"></param>
-    /// <param name="testDates"></param>
     /// <exception cref="EntityNotFoundException">Thrown when committee with given ID is not found</exception>
     public void UpdateCommittee(string id, string? designation = null, string? apprenticeShip = null, List<DateTime>? testDates = null)
     {
         _logger.LogInformation("Updating committee {Id}", id);
-        var result = _data.UpdateCommittee(id, committee =>
+        lock (_lock)
         {
+            var committee = _committeesList.FirstOrDefault(c => c.Id == id);
+            if (committee == null)
+            {
+                _logger.LogWarning("Committee {Id} not found for update", id);
+                throw new EntityNotFoundException("Committee", id);
+            }
+
             if (designation != null) committee.Designation = designation;
             if (apprenticeShip != null) committee.ApprenticeShip = apprenticeShip;
             if (testDates != null) committee.TestDates = testDates;
-        });
-        if (!result)
-        {
-            _logger.LogWarning("Committee {Id} not found for update", id);
-            throw new EntityNotFoundException("Committee", id);
+            committee.UpdatedAt = DateTime.Now;
         }
     }
 
     /// <summary>
     /// Deletes a committee object
     /// </summary>
-    /// <param name="id"></param>
     /// <exception cref="EntityNotFoundException">Thrown when committee with given ID is not found</exception>
     public void RemoveCommittee(string id)
     {
         _logger.LogInformation("Removing committee {Id}", id);
-        var result = _data.RemoveCommittee(id);
-        if (!result)
+        lock (_lock)
         {
-            _logger.LogWarning("Committee {Id} not found for removal", id);
-            throw new EntityNotFoundException("Committee", id);
+            var committee = _committeesList.FirstOrDefault(c => c.Id == id);
+            if (committee == null)
+            {
+                _logger.LogWarning("Committee {Id} not found for removal", id);
+                throw new EntityNotFoundException("Committee", id);
+            }
+            _committeesList.Remove(committee);
         }
     }
 
     /// <summary>
     /// Returns a committee object found with given id
     /// </summary>
-    /// <param name="id"></param>
-    /// <returns>The AuditCommittee object if found, null otherwise</returns>
     public AuditCommittee? GetCommitteeById(string id)
     {
         _logger.LogInformation("Getting committee by id {Id}", id);
-        return _data.GetCommitteeById(id);
+        lock (_lock)
+        {
+            return _committeesList.FirstOrDefault(c => c.Id == id);
+        }
     }
 
     /// <summary>
     /// Returns a readonly list of committee's to avoid unmanaged access on it
     /// </summary>
-    /// <returns>A readonly list containing all AuditCommittee objects</returns>
     public IReadOnlyList<AuditCommittee> GetAllCommittees()
     {
         _logger.LogInformation("Getting all committees");
-        return _data.GetAllCommittees();
+        lock (_lock)
+        {
+            return _committeesList.ToList().AsReadOnly();
+        }
     }
 
     // ===== Examinee Operations =====
@@ -130,91 +239,95 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <summary>
     /// Creates a new Examinee object with given parameters
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="company"></param>
-    /// <param name="contactPerson"></param>
-    /// <param name="projectTitle"></param>
-    /// <returns>The newly created Examinee object</returns>
     public Examinee AddExaminee(string name, string company, string contactPerson, string projectTitle)
     {
         _logger.LogInformation("Creating examinee: {Name}, {Company}, {ContactPerson}, {ProjectTitle}", name, company, contactPerson, projectTitle);
         var examinee = new Examinee(name, company, contactPerson, projectTitle);
-        _data.AddExaminee(examinee);
+        lock (_lock)
+        {
+            examinee.CreatedAt = DateTime.Now;
+            examinee.UpdatedAt = DateTime.Now;
+            _examineesList.Add(examinee);
+        }
         return examinee;
     }
 
     /// <summary>
     /// Updates an examinee object by given parameters
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="name"></param>
-    /// <param name="company"></param>
-    /// <param name="contactPerson"></param>
-    /// <param name="projectTitle"></param>
     /// <exception cref="EntityNotFoundException">Thrown when examinee with given ID is not found</exception>
     public void UpdateExaminee(string id, string? name = null, string? company = null, string? contactPerson = null, string? projectTitle = null)
     {
         _logger.LogInformation("Updating examinee {Id}", id);
-        var result = _data.UpdateExaminee(id, examinee =>
+        lock (_lock)
         {
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == id);
+            if (examinee == null)
+            {
+                _logger.LogWarning("Examinee {Id} not found for update", id);
+                throw new EntityNotFoundException("Examinee", id);
+            }
+
             if (name != null) examinee.Name = name;
             if (company != null) examinee.Company = company;
             if (contactPerson != null) examinee.ContactPerson = contactPerson;
             if (projectTitle != null) examinee.ProjectTitle = projectTitle;
-        });
-        if (!result)
-        {
-            _logger.LogWarning("Examinee {Id} not found for update", id);
-            throw new EntityNotFoundException("Examinee", id);
+            examinee.UpdatedAt = DateTime.Now;
         }
     }
 
     /// <summary>
     /// Searches for examinee object in committee's and deletes it's reference to the committee
     /// </summary>
-    /// <param name="id"></param>
     /// <exception cref="EntityNotFoundException">Thrown when examinee with given ID is not found</exception>
     public void RemoveExaminee(string id)
     {
         _logger.LogInformation("Removing examinee {Id}", id);
-        // First, remove from any committees that reference this examinee
-        var committees = _data.GetAllCommittees();
-        foreach (var committee in committees)
+        lock (_lock)
         {
-            if (committee.ExamineeId == id)
+            // First, remove from any committees that reference this examinee
+            foreach (var committee in _committeesList)
             {
-                _logger.LogInformation("Removing examinee {ExamineeId} reference from committee {CommitteeId}", id, committee.Id);
-                _data.UpdateCommittee(committee.Id, c => c.ExamineeId = null);
+                if (committee.ExamineeId == id)
+                {
+                    _logger.LogInformation("Removing examinee {ExamineeId} reference from committee {CommitteeId}", id, committee.Id);
+                    committee.ExamineeId = null;
+                    committee.UpdatedAt = DateTime.Now;
+                }
             }
-        }
 
-        var result = _data.RemoveExaminee(id);
-        if (!result)
-        {
-            _logger.LogWarning("Examinee {Id} not found for removal", id);
-            throw new EntityNotFoundException("Examinee", id);
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == id);
+            if (examinee == null)
+            {
+                _logger.LogWarning("Examinee {Id} not found for removal", id);
+                throw new EntityNotFoundException("Examinee", id);
+            }
+            _examineesList.Remove(examinee);
         }
     }
 
     /// <summary>
     /// Returns an examinee object found with given id
     /// </summary>
-    /// <param name="id"></param>
-    /// <returns>The Examinee object if found, null otherwise</returns>
     public Examinee? GetExamineeById(string id)
     {
         _logger.LogInformation("Getting examinee by id {Id}", id);
-        return _data.GetExamineeById(id);
+        lock (_lock)
+        {
+            return _examineesList.FirstOrDefault(e => e.Id == id);
+        }
     }
 
     /// <summary>
     /// Returns examinee list from data class as readonly to avoid unmanaged access
     /// </summary>
-    /// <returns>A readonly list containing all Examinee objects</returns>
     public IReadOnlyList<Examinee> GetAllExaminees()
     {
         _logger.LogInformation("Getting all examinees");
-        return _data.GetAllExaminees();
+        lock (_lock)
+        {
+            return _examineesList.ToList().AsReadOnly();
+        }
     }
 
     // ===== Relationship Management: Committee <-> Examinee =====
@@ -226,23 +339,24 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void AssignExamineeToCommittee(string committeeId, string examineeId)
     {
         _logger.LogInformation("Assigning examinee {ExamineeId} to committee {CommitteeId}", examineeId, committeeId);
-        // Verify examinee exists
-        var examinee = _data.GetExamineeById(examineeId);
-        if (examinee == null)
+        lock (_lock)
         {
-            _logger.LogWarning("Examinee {ExamineeId} not found for assignment", examineeId);
-            throw new EntityNotFoundException("Examinee", examineeId);
-        }
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
+            if (examinee == null)
+            {
+                _logger.LogWarning("Examinee {ExamineeId} not found for assignment", examineeId);
+                throw new EntityNotFoundException("Examinee", examineeId);
+            }
 
-        // Set the relationship
-        var result = _data.UpdateCommittee(committeeId, committee =>
-        {
+            var committee = _committeesList.FirstOrDefault(c => c.Id == committeeId);
+            if (committee == null)
+            {
+                _logger.LogWarning("Committee {CommitteeId} not found for assignment", committeeId);
+                throw new EntityNotFoundException("Committee", committeeId);
+            }
+
             committee.ExamineeId = examineeId;
-        });
-        if (!result)
-        {
-            _logger.LogWarning("Committee {CommitteeId} not found for assignment", committeeId);
-            throw new EntityNotFoundException("Committee", committeeId);
+            committee.UpdatedAt = DateTime.Now;
         }
     }
 
@@ -253,39 +367,44 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void RemoveExamineeFromCommittee(string committeeId)
     {
         _logger.LogInformation("Removing examinee from committee {CommitteeId}", committeeId);
-        var result = _data.UpdateCommittee(committeeId, committee =>
+        lock (_lock)
         {
+            var committee = _committeesList.FirstOrDefault(c => c.Id == committeeId);
+            if (committee == null)
+            {
+                _logger.LogWarning("Committee {CommitteeId} not found", committeeId);
+                throw new EntityNotFoundException("Committee", committeeId);
+            }
+
             committee.ExamineeId = null;
-        });
-        if (!result)
-        {
-            _logger.LogWarning("Committee {CommitteeId} not found", committeeId);
-            throw new EntityNotFoundException("Committee", committeeId);
+            committee.UpdatedAt = DateTime.Now;
         }
     }
 
     /// <summary>
     /// Resolves the relationship: Gets the examinee for a committee
     /// </summary>
-    /// <returns>The Examinee object if found and assigned to the committee, null otherwise</returns>
     public Examinee? GetExamineeForCommittee(string committeeId)
     {
         _logger.LogInformation("Getting examinee for committee {CommitteeId}", committeeId);
-        var committee = _data.GetCommitteeById(committeeId);
-        if (committee?.ExamineeId == null) return null;
-
-        return _data.GetExamineeById(committee.ExamineeId);
+        lock (_lock)
+        {
+            var committee = _committeesList.FirstOrDefault(c => c.Id == committeeId);
+            if (committee?.ExamineeId == null) return null;
+            return _examineesList.FirstOrDefault(e => e.Id == committee.ExamineeId);
+        }
     }
 
     /// <summary>
     /// Finds which committee an examinee belongs to
     /// </summary>
-    /// <returns>The AuditCommittee object if the examinee is assigned to one, null otherwise</returns>
     public AuditCommittee? GetCommitteeForExaminee(string examineeId)
     {
         _logger.LogInformation("Getting committee for examinee {ExamineeId}", examineeId);
-        var committees = _data.GetAllCommittees();
-        return committees.FirstOrDefault(c => c.ExamineeId == examineeId);
+        lock (_lock)
+        {
+            return _committeesList.FirstOrDefault(c => c.ExamineeId == examineeId);
+        }
     }
 
     // ===== Relationship Management: Examinee <-> Ratings =====
@@ -293,153 +412,153 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// <summary>
     /// Adds a reference to a given ProjectDocumentation object to an Examinee object with an id
     /// </summary>
-    /// <param name="examineeId"></param>
-    /// <param name="documentation"></param>
     /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
     public void AssignProjectDocumentation(string examineeId, ProjectDocumentation documentation)
     {
         _logger.LogInformation("Assigning project documentation {DocumentationId} to examinee {ExamineeId}", documentation.Id, examineeId);
-
-        // Verify examinee exists before adding documentation to prevent orphaned data
-        if (_data.GetExamineeById(examineeId) == null)
+        lock (_lock)
         {
-            _logger.LogWarning("Examinee {ExamineeId} not found for documentation assignment", examineeId);
-            throw new EntityNotFoundException("Examinee", examineeId);
-        }
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
+            if (examinee == null)
+            {
+                _logger.LogWarning("Examinee {ExamineeId} not found for documentation assignment", examineeId);
+                throw new EntityNotFoundException("Examinee", examineeId);
+            }
 
-        _data.AddProjectDocumentation(documentation);
-        _data.UpdateExaminee(examineeId, examinee =>
-        {
+            documentation.CreatedAt = DateTime.Now;
+            documentation.UpdatedAt = DateTime.Now;
+            _projectDocumentationList.Add(documentation);
             examinee.ProjectDocumentationId = documentation.Id;
-        });
+            examinee.UpdatedAt = DateTime.Now;
+        }
     }
 
     /// <summary>
     /// Returns a ProjectDocumentation object from a examinee with given id
     /// </summary>
-    /// <param name="examineeId"></param>
-    /// <returns>The ProjectDocumentation object if found and assigned to the examinee, null otherwise</returns>
     public ProjectDocumentation? GetProjectDocumentationForExaminee(string examineeId)
     {
         _logger.LogInformation("Getting project documentation for examinee {ExamineeId}", examineeId);
-        var examinee = _data.GetExamineeById(examineeId);
-        if (examinee?.ProjectDocumentationId == null) return null;
-
-        return _data.GetProjectDocumentationById(examinee.ProjectDocumentationId);
+        lock (_lock)
+        {
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
+            if (examinee?.ProjectDocumentationId == null) return null;
+            return _projectDocumentationList.FirstOrDefault(d => d.Id == examinee.ProjectDocumentationId);
+        }
     }
 
     /// <summary>
     /// Adds a reference to a given ProjectPresentation object to an Examinee object with an id
     /// </summary>
-    /// <param name="examineeId"></param>
-    /// <param name="presentation"></param>
     /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
     public void AssignProjectPresentation(string examineeId, ProjectPresentation presentation)
     {
         _logger.LogInformation("Assigning project presentation {PresentationId} to examinee {ExamineeId}", presentation.Id, examineeId);
-
-        // Verify examinee exists before adding presentation to prevent orphaned data
-        if (_data.GetExamineeById(examineeId) == null)
+        lock (_lock)
         {
-            _logger.LogWarning("Examinee {ExamineeId} not found for presentation assignment", examineeId);
-            throw new EntityNotFoundException("Examinee", examineeId);
-        }
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
+            if (examinee == null)
+            {
+                _logger.LogWarning("Examinee {ExamineeId} not found for presentation assignment", examineeId);
+                throw new EntityNotFoundException("Examinee", examineeId);
+            }
 
-        _data.AddProjectPresentation(presentation);
-        _data.UpdateExaminee(examineeId, examinee =>
-        {
+            presentation.CreatedAt = DateTime.Now;
+            presentation.UpdatedAt = DateTime.Now;
+            _projectPresentationList.Add(presentation);
             examinee.ProjectPresentationId = presentation.Id;
-        });
+            examinee.UpdatedAt = DateTime.Now;
+        }
     }
 
     /// <summary>
     /// Returns a ProjectPresentation object from an Examinee with id
     /// </summary>
-    /// <param name="examineeId"></param>
-    /// <returns>The ProjectPresentation object if found and assigned to the examinee, null otherwise</returns>
     public ProjectPresentation? GetProjectPresentationForExaminee(string examineeId)
     {
         _logger.LogInformation("Getting project presentation for examinee {ExamineeId}", examineeId);
-        var examinee = _data.GetExamineeById(examineeId);
-        if (examinee?.ProjectPresentationId == null) return null;
-
-        return _data.GetProjectPresentationById(examinee.ProjectPresentationId);
+        lock (_lock)
+        {
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
+            if (examinee?.ProjectPresentationId == null) return null;
+            return _projectPresentationList.FirstOrDefault(p => p.Id == examinee.ProjectPresentationId);
+        }
     }
 
     /// <summary>
     /// Adds a reference to a given TechConversation object to an Examinee object with an id
     /// </summary>
-    /// <param name="examineeId"></param>
-    /// <param name="conversation"></param>
     /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
     public void AssignTechConversation(string examineeId, TechConversation conversation)
     {
         _logger.LogInformation("Assigning tech conversation {ConversationId} to examinee {ExamineeId}", conversation.Id, examineeId);
-
-        // Verify examinee exists before adding conversation to prevent orphaned data
-        if (_data.GetExamineeById(examineeId) == null)
+        lock (_lock)
         {
-            _logger.LogWarning("Examinee {ExamineeId} not found for tech conversation assignment", examineeId);
-            throw new EntityNotFoundException("Examinee", examineeId);
-        }
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
+            if (examinee == null)
+            {
+                _logger.LogWarning("Examinee {ExamineeId} not found for tech conversation assignment", examineeId);
+                throw new EntityNotFoundException("Examinee", examineeId);
+            }
 
-        _data.AddTechConversation(conversation);
-        _data.UpdateExaminee(examineeId, examinee =>
-        {
+            conversation.CreatedAt = DateTime.Now;
+            conversation.UpdatedAt = DateTime.Now;
+            _projectTechConversationList.Add(conversation);
             examinee.TechConversationId = conversation.Id;
-        });
+            examinee.UpdatedAt = DateTime.Now;
+        }
     }
 
     /// <summary>
     /// Returns a TechConversation object from an Examinee with id
     /// </summary>
-    /// <param name="examineeId"></param>
-    /// <returns>The TechConversation object if found and assigned to the examinee, null otherwise</returns>
     public TechConversation? GetTechConversationForExaminee(string examineeId)
     {
         _logger.LogInformation("Getting tech conversation for examinee {ExamineeId}", examineeId);
-        var examinee = _data.GetExamineeById(examineeId);
-        if (examinee?.TechConversationId == null) return null;
-
-        return _data.GetTechConversationById(examinee.TechConversationId);
+        lock (_lock)
+        {
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
+            if (examinee?.TechConversationId == null) return null;
+            return _projectTechConversationList.FirstOrDefault(t => t.Id == examinee.TechConversationId);
+        }
     }
 
     /// <summary>
     /// Adds a reference to a given SupplementaryExamination object to an Examinee object with an id
     /// </summary>
-    /// <param name="examineeId"></param>
-    /// <param name="exam"></param>
     /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
     public void AssignSupplementaryExamination(string examineeId, SupplementaryExamination exam)
     {
         _logger.LogInformation("Assigning supplementary examination {ExamId} to examinee {ExamineeId}", exam.Id, examineeId);
-
-        // Verify examinee exists before adding examination to prevent orphaned data
-        if (_data.GetExamineeById(examineeId) == null)
+        lock (_lock)
         {
-            _logger.LogWarning("Examinee {ExamineeId} not found for supplementary examination assignment", examineeId);
-            throw new EntityNotFoundException("Examinee", examineeId);
-        }
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
+            if (examinee == null)
+            {
+                _logger.LogWarning("Examinee {ExamineeId} not found for supplementary examination assignment", examineeId);
+                throw new EntityNotFoundException("Examinee", examineeId);
+            }
 
-        _data.AddSupplementaryExamination(exam);
-        _data.UpdateExaminee(examineeId, examinee =>
-        {
+            exam.CreatedAt = DateTime.Now;
+            exam.UpdatedAt = DateTime.Now;
+            _supplementaryExaminationList.Add(exam);
             examinee.SupplementaryExaminationId = exam.Id;
-        });
+            examinee.UpdatedAt = DateTime.Now;
+        }
     }
 
     /// <summary>
     /// Returns a SupplementaryExamination object from an Examinee with id
     /// </summary>
-    /// <param name="examineeId"></param>
-    /// <returns>The SupplementaryExamination object if found and assigned to the examinee, null otherwise</returns>
     public SupplementaryExamination? GetSupplementaryExaminationForExaminee(string examineeId)
     {
         _logger.LogInformation("Getting supplementary examination for examinee {ExamineeId}", examineeId);
-        var examinee = _data.GetExamineeById(examineeId);
-        if (examinee?.SupplementaryExaminationId == null) return null;
-
-        return _data.GetSupplementaryExaminationById(examinee.SupplementaryExaminationId);
+        lock (_lock)
+        {
+            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
+            if (examinee?.SupplementaryExaminationId == null) return null;
+            return _supplementaryExaminationList.FirstOrDefault(s => s.Id == examinee.SupplementaryExaminationId);
+        }
     }
 
     /// <summary>

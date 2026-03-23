@@ -36,13 +36,13 @@ Three-project .NET 9 solution:
 
 ### Backend Layering
 
-`IEvalProServiceApi` (single API interface) → `EvalProService` (service implementation) → `ServiceData` (thread-safe data store with `Lock`) → `config.json` (flat-file persistence)
+`IEvalProServiceApi` (single API interface) → `EvalProService` (service implementation with thread-safe data store using `Lock`) → `config.json` (flat-file persistence)
 
 - **Entities** inherit from `BaseEntity` (Id, CreatedAt, UpdatedAt). Two entity types: `AuditCommittee` and `Examinee`.
 - **Ratings** inherit from `BaseRating` (Id, CreatedAt, UpdatedAt, PointsPerCriteria, CommentsPerCriteria, FinalComment). Four types: `ProjectDocumentation`, `ProjectPresentation`, `TechConversation`, `SupplementaryExamination`.
 - Relationships are stored as nullable string ID references (not navigation properties). `AuditCommittee.ExamineeId` links to an examinee; `Examinee` has four nullable rating IDs.
-- `AutoDataSaver` persists to `config.json` every 500ms via timer and does a final save on dispose. Save errors are surfaced via `OnSaveError` event.
-- All `ServiceData` operations are guarded by a `Lock` for thread safety.
+- `AutoDataSaver` persists to `config.json` every 500ms via timer and does a final save on dispose. Save errors are surfaced via `OnSaveError` event. Takes an `Action` delegate for the save operation.
+- All data operations are guarded by a `Lock` for thread safety within `EvalProService`.
 
 ### UI Pattern
 
