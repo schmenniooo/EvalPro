@@ -30,16 +30,9 @@ public interface IEvalProServiceApi
     Examinee? GetExamineeForCommittee(string committeeId);
     AuditCommittee? GetCommitteeForExaminee(string examineeId);
 
-    // ===== Relationship Management: Examinee <-> Ratings =====
+    // ===== Rating Assignment =====
     void AssignProjectDocumentation(string examineeId, ProjectDocumentation documentation);
-    ProjectDocumentation? GetProjectDocumentationForExaminee(string examineeId);
-
     void AssignProjectPresentation(string examineeId, ProjectPresentation presentation);
-    ProjectPresentation? GetProjectPresentationForExaminee(string examineeId);
-
     void AssignTechConversation(string examineeId, TechConversation conversation);
-    TechConversation? GetTechConversationForExaminee(string examineeId);
-
     void AssignSupplementaryExamination(string examineeId, SupplementaryExamination exam);
-    SupplementaryExamination? GetSupplementaryExaminationForExaminee(string examineeId);
 }

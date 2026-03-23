@@ -1,3 +1,5 @@
+using EvalProService.impl.model.ratings;
+
 namespace EvalProService.impl.model.entities;
 
 public class Examinee : BaseEntity
@@ -10,13 +12,13 @@ public class Examinee : BaseEntity
     
     public string ProjectTitle { get; set; }
 
-    public string? ProjectDocumentationId { get; set; }
+    public ProjectDocumentation? ProjectDocumentation { get; set; }
     
-    public string? ProjectPresentationId { get; set; }
+    public ProjectPresentation? ProjectPresentation { get; set; }
     
-    public string? TechConversationId { get; set; }
+    public TechConversation? TechConversation { get; set; }
     
-    public string? SupplementaryExaminationId { get; set; }
+    public SupplementaryExamination? SupplementaryExamination { get; set; }
 
     public Examinee(string name, string company, string contactPerson, string projectTitle) {
         Name = name;

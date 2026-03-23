@@ -8,7 +8,7 @@ public class AuditCommittee : BaseEntity
     
     public List<DateTime> TestDates { get; set; }
 
-    public string? ExamineeId { get; set; }
+    public Examinee? Examinee { get; set; }
 
     public AuditCommittee(string designation, string apprenticeShip, List<DateTime> testDates)
     {

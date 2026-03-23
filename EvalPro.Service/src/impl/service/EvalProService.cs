@@ -24,10 +24,6 @@ public class EvalProService : IEvalProServiceApi, IDisposable
 
     private List<AuditCommittee> _committeesList = [];
     private List<Examinee> _examineesList = [];
-    private List<ProjectDocumentation> _projectDocumentationList = [];
-    private List<ProjectPresentation> _projectPresentationList = [];
-    private List<TechConversation> _projectTechConversationList = [];
-    private List<SupplementaryExamination> _supplementaryExaminationList = [];
 
     /// <summary>
     /// Event raised when auto-save fails. UI can subscribe to show warnings to the user.
@@ -63,22 +59,16 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     public void SaveConfigToJson()
     {
         _logger.LogInformation("Saving config to {FilePath}", ConfigFilePath);
-        // Capture snapshot while locked (fast)
         object data;
         lock (_lock)
         {
             data = new
             {
                 Committees = _committeesList.ToList(),
-                Examinees = _examineesList.ToList(),
-                ProjectDocumentation = _projectDocumentationList.ToList(),
-                ProjectPresentation = _projectPresentationList.ToList(),
-                TechConversation = _projectTechConversationList.ToList(),
-                SupplementaryExamination = _supplementaryExaminationList.ToList()
+                Examinees = _examineesList.ToList()
             };
         }
 
-        // Serialize and write to disk without lock (slow I/O)
         var options = new JsonSerializerOptions { WriteIndented = true };
         var jsonString = JsonSerializer.Serialize(data, options);
         File.WriteAllText(ConfigFilePath, jsonString);
@@ -112,30 +102,10 @@ public class EvalProService : IEvalProServiceApi, IDisposable
                 ? JsonSerializer.Deserialize<List<Examinee>>(examineesElement.GetRawText()) ?? []
                 : null;
 
-            var projectDocs = root.TryGetProperty("ProjectDocumentation", out JsonElement projectDocElement)
-                ? JsonSerializer.Deserialize<List<ProjectDocumentation>>(projectDocElement.GetRawText()) ?? []
-                : null;
-
-            var projectPres = root.TryGetProperty("ProjectPresentation", out JsonElement projectPresElement)
-                ? JsonSerializer.Deserialize<List<ProjectPresentation>>(projectPresElement.GetRawText()) ?? []
-                : null;
-
-            var techConv = root.TryGetProperty("TechConversation", out JsonElement techConvElement)
-                ? JsonSerializer.Deserialize<List<TechConversation>>(techConvElement.GetRawText()) ?? []
-                : null;
-
-            var suppExam = root.TryGetProperty("SupplementaryExamination", out JsonElement suppExamElement)
-                ? JsonSerializer.Deserialize<List<SupplementaryExamination>>(suppExamElement.GetRawText()) ?? []
-                : null;
-
             lock (_lock)
             {
                 if (committees != null) _committeesList = committees;
                 if (examinees != null) _examineesList = examinees;
-                if (projectDocs != null) _projectDocumentationList = projectDocs;
-                if (projectPres != null) _projectPresentationList = projectPres;
-                if (techConv != null) _projectTechConversationList = techConv;
-                if (suppExam != null) _supplementaryExaminationList = suppExam;
             }
             _logger.LogInformation("Config loaded successfully: {CommitteeCount} committees, {ExamineeCount} examinees",
                 _committeesList.Count, _examineesList.Count);
@@ -277,7 +247,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     }
 
     /// <summary>
-    /// Searches for examinee object in committee's and deletes it's reference to the committee
+    /// Removes an examinee and clears any committee references to it
     /// </summary>
     /// <exception cref="EntityNotFoundException">Thrown when examinee with given ID is not found</exception>
     public void RemoveExaminee(string id)
@@ -285,13 +255,12 @@ public class EvalProService : IEvalProServiceApi, IDisposable
         _logger.LogInformation("Removing examinee {Id}", id);
         lock (_lock)
         {
-            // First, remove from any committees that reference this examinee
             foreach (var committee in _committeesList)
             {
-                if (committee.ExamineeId == id)
+                if (committee.Examinee?.Id == id)
                 {
                     _logger.LogInformation("Removing examinee {ExamineeId} reference from committee {CommitteeId}", id, committee.Id);
-                    committee.ExamineeId = null;
+                    committee.Examinee = null;
                     committee.UpdatedAt = DateTime.Now;
                 }
             }
@@ -319,7 +288,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     }
 
     /// <summary>
-    /// Returns examinee list from data class as readonly to avoid unmanaged access
+    /// Returns examinee list as readonly to avoid unmanaged access
     /// </summary>
     public IReadOnlyList<Examinee> GetAllExaminees()
     {
@@ -333,7 +302,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     // ===== Relationship Management: Committee <-> Examinee =====
 
     /// <summary>
-    /// Connects an examinee to a committee by setting the ID reference
+    /// Connects an examinee to a committee by setting a direct reference
     /// </summary>
     /// <exception cref="EntityNotFoundException">Thrown when examinee or committee is not found</exception>
     public void AssignExamineeToCommittee(string committeeId, string examineeId)
@@ -355,7 +324,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
                 throw new EntityNotFoundException("Committee", committeeId);
             }
 
-            committee.ExamineeId = examineeId;
+            committee.Examinee = examinee;
             committee.UpdatedAt = DateTime.Now;
         }
     }
@@ -376,13 +345,13 @@ public class EvalProService : IEvalProServiceApi, IDisposable
                 throw new EntityNotFoundException("Committee", committeeId);
             }
 
-            committee.ExamineeId = null;
+            committee.Examinee = null;
             committee.UpdatedAt = DateTime.Now;
         }
     }
 
     /// <summary>
-    /// Resolves the relationship: Gets the examinee for a committee
+    /// Gets the examinee assigned to a committee
     /// </summary>
     public Examinee? GetExamineeForCommittee(string committeeId)
     {
@@ -390,8 +359,7 @@ public class EvalProService : IEvalProServiceApi, IDisposable
         lock (_lock)
         {
             var committee = _committeesList.FirstOrDefault(c => c.Id == committeeId);
-            if (committee?.ExamineeId == null) return null;
-            return _examineesList.FirstOrDefault(e => e.Id == committee.ExamineeId);
+            return committee?.Examinee;
         }
     }
 
@@ -403,19 +371,19 @@ public class EvalProService : IEvalProServiceApi, IDisposable
         _logger.LogInformation("Getting committee for examinee {ExamineeId}", examineeId);
         lock (_lock)
         {
-            return _committeesList.FirstOrDefault(c => c.ExamineeId == examineeId);
+            return _committeesList.FirstOrDefault(c => c.Examinee?.Id == examineeId);
         }
     }
 
-    // ===== Relationship Management: Examinee <-> Ratings =====
+    // ===== Rating Assignment =====
 
     /// <summary>
-    /// Adds a reference to a given ProjectDocumentation object to an Examinee object with an id
+    /// Assigns a ProjectDocumentation rating to an examinee
     /// </summary>
     /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
     public void AssignProjectDocumentation(string examineeId, ProjectDocumentation documentation)
     {
-        _logger.LogInformation("Assigning project documentation {DocumentationId} to examinee {ExamineeId}", documentation.Id, examineeId);
+        _logger.LogInformation("Assigning project documentation to examinee {ExamineeId}", examineeId);
         lock (_lock)
         {
             var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
@@ -425,35 +393,18 @@ public class EvalProService : IEvalProServiceApi, IDisposable
                 throw new EntityNotFoundException("Examinee", examineeId);
             }
 
-            documentation.CreatedAt = DateTime.Now;
-            documentation.UpdatedAt = DateTime.Now;
-            _projectDocumentationList.Add(documentation);
-            examinee.ProjectDocumentationId = documentation.Id;
+            examinee.ProjectDocumentation = documentation;
             examinee.UpdatedAt = DateTime.Now;
         }
     }
 
     /// <summary>
-    /// Returns a ProjectDocumentation object from a examinee with given id
-    /// </summary>
-    public ProjectDocumentation? GetProjectDocumentationForExaminee(string examineeId)
-    {
-        _logger.LogInformation("Getting project documentation for examinee {ExamineeId}", examineeId);
-        lock (_lock)
-        {
-            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
-            if (examinee?.ProjectDocumentationId == null) return null;
-            return _projectDocumentationList.FirstOrDefault(d => d.Id == examinee.ProjectDocumentationId);
-        }
-    }
-
-    /// <summary>
-    /// Adds a reference to a given ProjectPresentation object to an Examinee object with an id
+    /// Assigns a ProjectPresentation rating to an examinee
     /// </summary>
     /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
     public void AssignProjectPresentation(string examineeId, ProjectPresentation presentation)
     {
-        _logger.LogInformation("Assigning project presentation {PresentationId} to examinee {ExamineeId}", presentation.Id, examineeId);
+        _logger.LogInformation("Assigning project presentation to examinee {ExamineeId}", examineeId);
         lock (_lock)
         {
             var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
@@ -463,35 +414,18 @@ public class EvalProService : IEvalProServiceApi, IDisposable
                 throw new EntityNotFoundException("Examinee", examineeId);
             }
 
-            presentation.CreatedAt = DateTime.Now;
-            presentation.UpdatedAt = DateTime.Now;
-            _projectPresentationList.Add(presentation);
-            examinee.ProjectPresentationId = presentation.Id;
+            examinee.ProjectPresentation = presentation;
             examinee.UpdatedAt = DateTime.Now;
         }
     }
 
     /// <summary>
-    /// Returns a ProjectPresentation object from an Examinee with id
-    /// </summary>
-    public ProjectPresentation? GetProjectPresentationForExaminee(string examineeId)
-    {
-        _logger.LogInformation("Getting project presentation for examinee {ExamineeId}", examineeId);
-        lock (_lock)
-        {
-            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
-            if (examinee?.ProjectPresentationId == null) return null;
-            return _projectPresentationList.FirstOrDefault(p => p.Id == examinee.ProjectPresentationId);
-        }
-    }
-
-    /// <summary>
-    /// Adds a reference to a given TechConversation object to an Examinee object with an id
+    /// Assigns a TechConversation rating to an examinee
     /// </summary>
     /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
     public void AssignTechConversation(string examineeId, TechConversation conversation)
     {
-        _logger.LogInformation("Assigning tech conversation {ConversationId} to examinee {ExamineeId}", conversation.Id, examineeId);
+        _logger.LogInformation("Assigning tech conversation to examinee {ExamineeId}", examineeId);
         lock (_lock)
         {
             var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
@@ -501,35 +435,18 @@ public class EvalProService : IEvalProServiceApi, IDisposable
                 throw new EntityNotFoundException("Examinee", examineeId);
             }
 
-            conversation.CreatedAt = DateTime.Now;
-            conversation.UpdatedAt = DateTime.Now;
-            _projectTechConversationList.Add(conversation);
-            examinee.TechConversationId = conversation.Id;
+            examinee.TechConversation = conversation;
             examinee.UpdatedAt = DateTime.Now;
         }
     }
 
     /// <summary>
-    /// Returns a TechConversation object from an Examinee with id
-    /// </summary>
-    public TechConversation? GetTechConversationForExaminee(string examineeId)
-    {
-        _logger.LogInformation("Getting tech conversation for examinee {ExamineeId}", examineeId);
-        lock (_lock)
-        {
-            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
-            if (examinee?.TechConversationId == null) return null;
-            return _projectTechConversationList.FirstOrDefault(t => t.Id == examinee.TechConversationId);
-        }
-    }
-
-    /// <summary>
-    /// Adds a reference to a given SupplementaryExamination object to an Examinee object with an id
+    /// Assigns a SupplementaryExamination to an examinee
     /// </summary>
     /// <exception cref="EntityNotFoundException">Thrown when examinee is not found</exception>
     public void AssignSupplementaryExamination(string examineeId, SupplementaryExamination exam)
     {
-        _logger.LogInformation("Assigning supplementary examination {ExamId} to examinee {ExamineeId}", exam.Id, examineeId);
+        _logger.LogInformation("Assigning supplementary examination to examinee {ExamineeId}", examineeId);
         lock (_lock)
         {
             var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
@@ -539,25 +456,8 @@ public class EvalProService : IEvalProServiceApi, IDisposable
                 throw new EntityNotFoundException("Examinee", examineeId);
             }
 
-            exam.CreatedAt = DateTime.Now;
-            exam.UpdatedAt = DateTime.Now;
-            _supplementaryExaminationList.Add(exam);
-            examinee.SupplementaryExaminationId = exam.Id;
+            examinee.SupplementaryExamination = exam;
             examinee.UpdatedAt = DateTime.Now;
-        }
-    }
-
-    /// <summary>
-    /// Returns a SupplementaryExamination object from an Examinee with id
-    /// </summary>
-    public SupplementaryExamination? GetSupplementaryExaminationForExaminee(string examineeId)
-    {
-        _logger.LogInformation("Getting supplementary examination for examinee {ExamineeId}", examineeId);
-        lock (_lock)
-        {
-            var examinee = _examineesList.FirstOrDefault(e => e.Id == examineeId);
-            if (examinee?.SupplementaryExaminationId == null) return null;
-            return _supplementaryExaminationList.FirstOrDefault(s => s.Id == examinee.SupplementaryExaminationId);
         }
     }
 
