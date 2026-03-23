@@ -1,16 +1,25 @@
+using EvalProService.impl.model.entities;
+
 namespace EvalProService.impl.model.ratings;
 
-public class SupplementaryExamination
+/// <summary>
+/// Represents the supplementary oral examination with free-form questions.
+/// </summary>
+public class SupplementaryExamination : BaseEntity
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
-    public DateTime UpdatedAt { get; set; } = DateTime.Now;
-    
+    /// <summary>The subject area chosen for the examination</summary>
     public string ChosenTestArea { get; set; }
+    
+    /// <summary>Total points awarded</summary>
     public int Points { get; set; }
+    
+    /// <summary>List of questions asked during the examination</summary>
     public List<string> Questions { get; set; }
 
-    public SupplementaryExamination(string chosenTestArea, int points,  List<string> questions)
+    /// <summary>
+    /// Creates a new supplementary examination record.
+    /// </summary>
+    public SupplementaryExamination(string chosenTestArea, int points, List<string> questions)
     {
         ChosenTestArea = chosenTestArea;
         Points = points;

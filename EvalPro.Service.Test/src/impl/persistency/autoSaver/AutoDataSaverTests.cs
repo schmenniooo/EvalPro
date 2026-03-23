@@ -1,6 +1,5 @@
 using EvalProService.impl.model.entities;
 using EvalProService.impl.model.events;
-using EvalProService.impl.persistency;
 using EvalProService.impl.persistency.autoSaver;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -10,10 +9,9 @@ namespace EvalProServiceTest.impl.persistency.autoSaver;
 
 public class AutoDataSaverTests : IDisposable
 {
-    private readonly ServiceData _serviceData;
+    private readonly ServiceClass _service;
     private readonly AutoDataSaver _autoSaver;
     private static readonly DateTime FixedTestDate = new(2026, 6, 15, 10, 30, 0);
-    private const int TimerInterval = 500;
     private const int SafeWaitTime = 800; // Wait time to ensure at least one timer tick
 
     public AutoDataSaverTests()
@@ -24,30 +22,23 @@ public class AutoDataSaverTests : IDisposable
             File.Delete("config.json");
         }
 
-        _serviceData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        _autoSaver = new AutoDataSaver(_serviceData, NullLogger<ServiceClass>.Instance);
+        _service = new ServiceClass();
+        _autoSaver = new AutoDataSaver(_service.SaveConfigToJson, NullLogger<ServiceClass>.Instance);
     }
 
     [Fact]
     public void Constructor_InitializesSuccessfully()
     {
-        // Arrange & Act - Constructor called in setup
-
         // Assert - No exception thrown, instance created
         Assert.NotNull(_autoSaver);
-        Assert.NotNull(_serviceData);
+        Assert.NotNull(_service);
     }
 
     [Fact]
     public void StartAutoSaveTimer_SavesDataPeriodically()
     {
         // Arrange - Add test data with fixed date
-        var committee = new AuditCommittee(
-            designation: "Auto-saved Committee",
-            apprenticeShip: "Software Development",
-            testDates: new List<DateTime> { FixedTestDate }
-        );
-        _serviceData.AddCommittee(committee);
+        _service.AddCommittee("Auto-saved Committee", "Software Development", new List<DateTime> { FixedTestDate });
 
         // Delete file to ensure timer creates it
         if (File.Exists("config.json"))
@@ -63,18 +54,18 @@ public class AutoDataSaverTests : IDisposable
         Assert.True(File.Exists("config.json"), "Timer should have created config.json");
 
         // Verify content by loading
-        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        var committees = loadedData.GetAllCommittees();
+        var loadedService = new ServiceClass();
+        var committees = loadedService.GetAllCommittees();
         Assert.Single(committees);
         Assert.Equal("Auto-saved Committee", committees[0].Designation);
+        loadedService.Dispose();
     }
 
     [Fact]
     public void StartAutoSaveTimer_CalledMultipleTimes_DoesNotCrash()
     {
         // Arrange
-        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.AddCommittee(committee);
+        _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
 
         // Act - Start timer multiple times
         _autoSaver.StartAutoSaveTimer();
@@ -85,20 +76,16 @@ public class AutoDataSaverTests : IDisposable
 
         // Assert - Should not crash, file should exist
         Assert.True(File.Exists("config.json"));
-        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        Assert.Single(loadedData.GetAllCommittees());
+        var loadedService = new ServiceClass();
+        Assert.Single(loadedService.GetAllCommittees());
+        loadedService.Dispose();
     }
 
     [Fact]
     public void Dispose_SavesDataBeforeCleanup()
     {
         // Arrange - Add data but don't start timer
-        var committee = new AuditCommittee(
-            designation: "Final Committee",
-            apprenticeShip: "IT",
-            testDates: new List<DateTime> { FixedTestDate }
-        );
-        _serviceData.AddCommittee(committee);
+        _service.AddCommittee("Final Committee", "IT", new List<DateTime> { FixedTestDate });
 
         // Delete any existing file to ensure Dispose creates it
         if (File.Exists("config.json"))
@@ -112,54 +99,46 @@ public class AutoDataSaverTests : IDisposable
         // Assert - File should exist with correct data
         Assert.True(File.Exists("config.json"));
 
-        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        var committees = loadedData.GetAllCommittees();
+        var loadedService = new ServiceClass();
+        var committees = loadedService.GetAllCommittees();
         Assert.Single(committees);
         Assert.Equal("Final Committee", committees[0].Designation);
+        loadedService.Dispose();
     }
 
     [Fact]
     public void StartAutoSaveTimer_HandlesMultipleSaveCycles()
     {
         // Arrange - Add initial data
-        var committee = new AuditCommittee(
-            designation: "Initial Committee",
-            apprenticeShip: "Development",
-            testDates: new List<DateTime> { FixedTestDate }
-        );
-        _serviceData.AddCommittee(committee);
+        _service.AddCommittee("Initial Committee", "Development", new List<DateTime> { FixedTestDate });
 
         // Act - Start timer and wait for first save
         _autoSaver.StartAutoSaveTimer();
         Thread.Sleep(SafeWaitTime);
 
         // Verify first save
-        var firstLoad = new ServiceData(NullLogger<ServiceClass>.Instance);
+        var firstLoad = new ServiceClass();
         Assert.Single(firstLoad.GetAllCommittees());
+        firstLoad.Dispose();
 
         // Add more data
-        var committee2 = new AuditCommittee(
-            designation: "Second Committee",
-            apprenticeShip: "Testing",
-            testDates: new List<DateTime> { FixedTestDate.AddDays(1) }
-        );
-        _serviceData.AddCommittee(committee2);
+        _service.AddCommittee("Second Committee", "Testing", new List<DateTime> { FixedTestDate.AddDays(1) });
         Thread.Sleep(SafeWaitTime); // Wait for second save
 
         // Assert - Both committees should be saved
-        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        var committees = loadedData.GetAllCommittees();
+        var loadedService = new ServiceClass();
+        var committees = loadedService.GetAllCommittees();
         Assert.Equal(2, committees.Count);
         Assert.Equal("Initial Committee", committees[0].Designation);
         Assert.Equal("Second Committee", committees[1].Designation);
+        loadedService.Dispose();
     }
 
     [Fact]
     public void AutoSaver_WithConcurrentModifications_SavesCorrectly()
     {
         // Arrange
-        var committee = new AuditCommittee("Initial", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.AddCommittee(committee);
+        _service.AddCommittee("Initial", "IT", new List<DateTime> { FixedTestDate });
 
         // Act - Start timer
         _autoSaver.StartAutoSaveTimer();
@@ -168,35 +147,26 @@ public class AutoDataSaverTests : IDisposable
         // Add items concurrently with timer
         for (int i = 0; i < 3; i++)
         {
-            var newCommittee = new AuditCommittee(
-                designation: $"Committee {i}",
-                apprenticeShip: "IT",
-                testDates: new List<DateTime> { FixedTestDate.AddDays(i) }
-            );
-            _serviceData.AddCommittee(newCommittee);
+            _service.AddCommittee($"Committee {i}", "IT", new List<DateTime> { FixedTestDate.AddDays(i) });
             Thread.Sleep(250); // Add items faster than timer interval
         }
 
         Thread.Sleep(SafeWaitTime); // Wait for final save
 
         // Assert - All items should be saved
-        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        Assert.Equal(4, loadedData.GetAllCommittees().Count); // 1 initial + 3 added
+        var loadedService = new ServiceClass();
+        Assert.Equal(4, loadedService.GetAllCommittees().Count); // 1 initial + 3 added
+        loadedService.Dispose();
     }
 
     [Fact]
     public void AutoSaver_WhenDisposed_StopsTimer()
     {
         // Arrange
-        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.AddCommittee(committee);
+        _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
 
         _autoSaver.StartAutoSaveTimer();
         Thread.Sleep(SafeWaitTime); // Let it save once
-
-        // Note the file modification time
-        var fileInfo = new FileInfo("config.json");
-        var lastWriteTime = fileInfo.LastWriteTime;
 
         // Act - Dispose should stop timer
         _autoSaver.Dispose();
@@ -204,21 +174,15 @@ public class AutoDataSaverTests : IDisposable
         // Wait longer than timer interval
         Thread.Sleep(SafeWaitTime * 2);
 
-        // Assert - File should not have been modified again (timer stopped)
-        // Note: This test may be flaky due to Dispose also saving, so we just verify no crash
+        // Assert - Should not crash, file should exist
         Assert.True(File.Exists("config.json"));
     }
 
     [Fact]
     public void AutoSaver_SaveErrorInTimer_DoesNotCrashTimer()
     {
-        // This test verifies that the try-catch in SaveDataTimerEvent works
-        // We can't easily force a save error without changing implementation,
-        // but we can verify the timer keeps running even after an error
-
         // Arrange
-        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.AddCommittee(committee);
+        _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
 
         // Act - Start timer
         _autoSaver.StartAutoSaveTimer();
@@ -230,8 +194,9 @@ public class AutoDataSaverTests : IDisposable
         Assert.True(File.Exists("config.json"));
 
         // Verify data is still being saved
-        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        Assert.Single(loadedData.GetAllCommittees());
+        var loadedService = new ServiceClass();
+        Assert.Single(loadedService.GetAllCommittees());
+        loadedService.Dispose();
     }
 
     [Fact]
@@ -250,9 +215,10 @@ public class AutoDataSaverTests : IDisposable
         // Assert - Should save empty lists without error
         Assert.True(File.Exists("config.json"));
 
-        var loadedData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        Assert.Empty(loadedData.GetAllCommittees());
-        Assert.Empty(loadedData.GetAllExaminees());
+        var loadedService = new ServiceClass();
+        Assert.Empty(loadedService.GetAllCommittees());
+        Assert.Empty(loadedService.GetAllExaminees());
+        loadedService.Dispose();
     }
 
     [Fact]
@@ -262,11 +228,10 @@ public class AutoDataSaverTests : IDisposable
         AutoSaveErrorEventArgs? receivedArgs = null;
         _autoSaver.OnSaveError += (_, args) => receivedArgs = args;
 
-        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _serviceData.AddCommittee(committee);
+        _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
 
         // Make the config file read-only to trigger a save error
-        _serviceData.SaveConfigToJson(); // Create the file first
+        _service.SaveConfigToJson(); // Create the file first
         File.SetAttributes("config.json", FileAttributes.ReadOnly);
 
         try
@@ -293,15 +258,14 @@ public class AutoDataSaverTests : IDisposable
     {
         // Arrange
         AutoSaveErrorEventArgs? receivedArgs = null;
-        var localServiceData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        var localAutoSaver = new AutoDataSaver(localServiceData, NullLogger<ServiceClass>.Instance);
+        var localService = new ServiceClass();
+        var localAutoSaver = new AutoDataSaver(localService.SaveConfigToJson, NullLogger<ServiceClass>.Instance);
         localAutoSaver.OnSaveError += (_, args) => receivedArgs = args;
 
-        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        localServiceData.AddCommittee(committee);
+        localService.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
 
         // Make the config file read-only to trigger a save error
-        localServiceData.SaveConfigToJson(); // Create the file first
+        localService.SaveConfigToJson(); // Create the file first
         File.SetAttributes("config.json", FileAttributes.ReadOnly);
 
         try
@@ -318,6 +282,7 @@ public class AutoDataSaverTests : IDisposable
         {
             // Cleanup - Remove read-only attribute
             File.SetAttributes("config.json", FileAttributes.Normal);
+            localService.Dispose();
         }
     }
 
@@ -326,14 +291,13 @@ public class AutoDataSaverTests : IDisposable
     {
         // Arrange
         AutoSaveErrorEventArgs? receivedArgs = null;
-        var localServiceData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        var localAutoSaver = new AutoDataSaver(localServiceData, NullLogger<ServiceClass>.Instance);
+        var localService = new ServiceClass();
+        var localAutoSaver = new AutoDataSaver(localService.SaveConfigToJson, NullLogger<ServiceClass>.Instance);
         localAutoSaver.OnSaveError += (_, args) => receivedArgs = args;
 
-        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        localServiceData.AddCommittee(committee);
+        localService.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
 
-        localServiceData.SaveConfigToJson();
+        localService.SaveConfigToJson();
         File.SetAttributes("config.json", FileAttributes.ReadOnly);
 
         var beforeDispose = DateTime.Now;
@@ -351,6 +315,7 @@ public class AutoDataSaverTests : IDisposable
         finally
         {
             File.SetAttributes("config.json", FileAttributes.Normal);
+            localService.Dispose();
         }
     }
 
@@ -358,13 +323,12 @@ public class AutoDataSaverTests : IDisposable
     public void OnSaveError_WhenNoSubscribers_DoesNotThrow()
     {
         // Arrange - Don't subscribe to the event
-        var localServiceData = new ServiceData(NullLogger<ServiceClass>.Instance);
-        var localAutoSaver = new AutoDataSaver(localServiceData, NullLogger<ServiceClass>.Instance);
+        var localService = new ServiceClass();
+        var localAutoSaver = new AutoDataSaver(localService.SaveConfigToJson, NullLogger<ServiceClass>.Instance);
 
-        var committee = new AuditCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        localServiceData.AddCommittee(committee);
+        localService.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
 
-        localServiceData.SaveConfigToJson();
+        localService.SaveConfigToJson();
         File.SetAttributes("config.json", FileAttributes.ReadOnly);
 
         try
@@ -376,6 +340,7 @@ public class AutoDataSaverTests : IDisposable
         finally
         {
             File.SetAttributes("config.json", FileAttributes.Normal);
+            localService.Dispose();
         }
     }
 
@@ -385,6 +350,15 @@ public class AutoDataSaverTests : IDisposable
         try
         {
             _autoSaver?.Dispose();
+        }
+        catch
+        {
+            // Ignore disposal errors in cleanup
+        }
+
+        try
+        {
+            _service?.Dispose();
         }
         catch
         {

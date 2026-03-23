@@ -1,16 +1,18 @@
 using System.Timers;
-using EvalProService.impl.exceptions;
 using EvalProService.impl.model.events;
 using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
 
 namespace EvalProService.impl.persistency.autoSaver;
 
+/// <summary>
+/// Periodically saves data to disk using a timer and performs a final save on dispose.
+/// </summary>
 public class AutoDataSaver : IDisposable
 {
     private const int TimerDuration = 500;
     private readonly Timer _timer = new(TimerDuration);
-    private readonly ServiceData _data;
+    private readonly Action _saveAction;
     private readonly ILogger _logger;
 
     /// <summary>
@@ -18,9 +20,14 @@ public class AutoDataSaver : IDisposable
     /// </summary>
     public event EventHandler<AutoSaveErrorEventArgs>? OnSaveError;
 
-    public AutoDataSaver(ServiceData data, ILogger logger)
+    /// <summary>
+    /// Creates a new auto-saver that will call the given save action periodically.
+    /// </summary>
+    /// <param name="saveAction">The action to invoke for saving data</param>
+    /// <param name="logger">Logger instance</param>
+    public AutoDataSaver(Action saveAction, ILogger logger)
     {
-        _data = data;
+        _saveAction = saveAction;
         _logger = logger;
     }
 
@@ -46,7 +53,7 @@ public class AutoDataSaver : IDisposable
     {
         try
         {
-            _data.SaveConfigToJson();
+            _saveAction();
             _logger.LogInformation("Auto-saved data at {Timestamp}", e.SignalTime);
         }
         catch (Exception ex)
@@ -69,7 +76,7 @@ public class AutoDataSaver : IDisposable
         // Save data before garbage collection (critical - last chance to save)
         try
         {
-            _data.SaveConfigToJson();
+            _saveAction();
             _logger.LogInformation("Final save completed during dispose");
         }
         catch (Exception ex)
@@ -81,3 +88,4 @@ public class AutoDataSaver : IDisposable
         _logger.LogInformation("Auto-Saver disposed");
     }
 }
+

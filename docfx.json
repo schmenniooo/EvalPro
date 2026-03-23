@@ -1,0 +1,39 @@
+{
+  "build": {
+    "content": [
+      {
+        "files": ["**/*.csproj"],
+        "src": "EvalPro.Service"
+      },
+      {
+        "files": ["**/*.csproj"],
+        "src": "EvalPro.UI"
+      }
+    ],
+    "dest": "_site",
+    "globalMetadataFiles": [],
+    "fileMetadataFiles": [],
+    "template": ["default", "modern"],
+    "postProcessors": [],
+    "markdownEngineName": "markdig",
+    "noLangKeyword": false,
+    "keepFileLink": false,
+    "cleanupCacheHistory": false,
+    "disableGitFeatures": false
+  },
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": ["**/*.csproj"],
+          "src": "EvalPro.Service"
+        },
+        {
+          "files": ["**/*.csproj"],
+          "src": "EvalPro.UI"
+        }
+      ],
+      "dest": "api"
+    }
+  ]
+}
