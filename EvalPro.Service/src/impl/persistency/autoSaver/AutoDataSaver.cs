@@ -5,6 +5,9 @@ using Timer = System.Timers.Timer;
 
 namespace EvalProService.impl.persistency.autoSaver;
 
+/// <summary>
+/// Periodically saves data to disk using a timer and performs a final save on dispose.
+/// </summary>
 public class AutoDataSaver : IDisposable
 {
     private const int TimerDuration = 500;
@@ -17,6 +20,11 @@ public class AutoDataSaver : IDisposable
     /// </summary>
     public event EventHandler<AutoSaveErrorEventArgs>? OnSaveError;
 
+    /// <summary>
+    /// Creates a new auto-saver that will call the given save action periodically.
+    /// </summary>
+    /// <param name="saveAction">The action to invoke for saving data</param>
+    /// <param name="logger">Logger instance</param>
     public AutoDataSaver(Action saveAction, ILogger logger)
     {
         _saveAction = saveAction;

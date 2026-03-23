@@ -31,6 +31,9 @@ public class EvalProService : IEvalProServiceApi, IDisposable
     /// </summary>
     public event EventHandler<AutoSaveErrorEventArgs>? OnSaveError;
 
+    /// <summary>
+    /// Initializes the service: configures logging, loads persisted data, and starts auto-save.
+    /// </summary>
     public EvalProService()
     {
         Log.Logger = new LoggerConfiguration()
