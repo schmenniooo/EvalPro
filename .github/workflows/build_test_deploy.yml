@@ -3,15 +3,15 @@ name: Build_Test_Deploy_Solution
 on:
   pull_request:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
-    
+
 permissions:
   contents: write
 
-jobs: 
-  build_test:
-    name: Build and Test Solution
+jobs:
+  build-test:
+    name: build-test-solution
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,31 +19,31 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 9.0
-          
+
       - name: Restore dependencies
         run: dotnet restore
-      
+
       - name: Build
         run: dotnet build --no-restore
-        
+
       - name: Test
         run: dotnet test --no-build --verbosity normal
 
   deploy:
-    name: Create Release ZIP
+    name: create-release-zip
     runs-on: windows-latest
-    needs: build_test
+    needs: build-test
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-  
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0
-  
+
       - name: Build (Release)
         run: dotnet publish -c Release -o out
 
@@ -70,4 +70,3 @@ jobs:
           files: artifact/App.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
