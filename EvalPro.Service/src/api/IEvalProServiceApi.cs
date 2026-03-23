@@ -16,10 +16,10 @@ public interface IEvalProServiceApi
     AuditCommittee AddCommittee(string designation, string apprenticeShip, List<DateTime> testDates);
 
     /// <summary>Updates an existing committee's properties (pass null to leave unchanged)</summary>
-    void UpdateCommittee(string id, string? designation = null, string? apprenticeShip = null, List<DateTime>? testDates = null);
+    void UpdateCommittee(AuditCommittee committee, string? designation = null, string? apprenticeShip = null, List<DateTime>? testDates = null);
 
-    /// <summary>Removes a committee by ID</summary>
-    void RemoveCommittee(string id);
+    /// <summary>Removes a committee</summary>
+    void RemoveCommittee(AuditCommittee committee);
 
     /// <summary>Finds a committee by ID, or returns null</summary>
     AuditCommittee? GetCommitteeById(string id);
@@ -33,10 +33,10 @@ public interface IEvalProServiceApi
     Examinee AddExaminee(string name, string company, string contactPerson, string projectTitle);
 
     /// <summary>Updates an existing examinee's properties (pass null to leave unchanged)</summary>
-    void UpdateExaminee(string id, string? name = null, string? company = null, string? contactPerson = null, string? projectTitle = null);
+    void UpdateExaminee(Examinee examinee, string? name = null, string? company = null, string? contactPerson = null, string? projectTitle = null);
 
-    /// <summary>Removes an examinee by ID and clears any committee references to it</summary>
-    void RemoveExaminee(string id);
+    /// <summary>Removes an examinee and clears any committee references to it</summary>
+    void RemoveExaminee(Examinee examinee);
 
     /// <summary>Finds an examinee by ID, or returns null</summary>
     Examinee? GetExamineeById(string id);
@@ -47,28 +47,28 @@ public interface IEvalProServiceApi
     // ===== Relationship Management: Committee <-> Examinee =====
 
     /// <summary>Assigns an examinee to a committee</summary>
-    void AssignExamineeToCommittee(string committeeId, string examineeId);
+    void AssignExamineeToCommittee(AuditCommittee committee, Examinee examinee);
 
     /// <summary>Removes the examinee reference from a committee</summary>
-    void RemoveExamineeFromCommittee(string committeeId);
+    void RemoveExamineeFromCommittee(AuditCommittee committee);
 
     /// <summary>Gets the examinee assigned to a committee, or null</summary>
-    Examinee? GetExamineeForCommittee(string committeeId);
+    Examinee? GetExamineeForCommittee(AuditCommittee committee);
 
     /// <summary>Finds which committee an examinee belongs to, or null</summary>
-    AuditCommittee? GetCommitteeForExaminee(string examineeId);
+    AuditCommittee? GetCommitteeForExaminee(Examinee examinee);
 
     // ===== Rating Assignment =====
 
     /// <summary>Assigns a project documentation rating to an examinee</summary>
-    void AssignProjectDocumentation(string examineeId, ProjectDocumentation documentation);
+    void AssignProjectDocumentation(Examinee examinee, ProjectDocumentation documentation);
 
     /// <summary>Assigns a project presentation rating to an examinee</summary>
-    void AssignProjectPresentation(string examineeId, ProjectPresentation presentation);
+    void AssignProjectPresentation(Examinee examinee, ProjectPresentation presentation);
 
     /// <summary>Assigns a tech conversation rating to an examinee</summary>
-    void AssignTechConversation(string examineeId, TechConversation conversation);
+    void AssignTechConversation(Examinee examinee, TechConversation conversation);
 
     /// <summary>Assigns a supplementary examination to an examinee</summary>
-    void AssignSupplementaryExamination(string examineeId, SupplementaryExamination exam);
+    void AssignSupplementaryExamination(Examinee examinee, SupplementaryExamination exam);
 }

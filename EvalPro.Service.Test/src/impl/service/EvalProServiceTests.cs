@@ -74,23 +74,19 @@ public class EvalProServiceTests : IDisposable
     public void UpdateCommittee_UpdatesDesignation()
     {
         var committee = _service.AddCommittee("Original", "IT", new List<DateTime> { FixedTestDate });
-        _service.UpdateCommittee(committee.Id, designation: "Updated");
+        _service.UpdateCommittee(committee, designation: "Updated");
 
-        var updated = _service.GetCommitteeById(committee.Id);
-        Assert.NotNull(updated);
-        Assert.Equal("Updated", updated.Designation);
-        Assert.Equal("IT", updated.ApprenticeShip);
+        Assert.Equal("Updated", committee.Designation);
+        Assert.Equal("IT", committee.ApprenticeShip);
     }
 
     [Fact]
     public void UpdateCommittee_UpdatesApprenticeShip()
     {
         var committee = _service.AddCommittee("Test", "Original", new List<DateTime> { FixedTestDate });
-        _service.UpdateCommittee(committee.Id, apprenticeShip: "Updated");
+        _service.UpdateCommittee(committee, apprenticeShip: "Updated");
 
-        var updated = _service.GetCommitteeById(committee.Id);
-        Assert.NotNull(updated);
-        Assert.Equal("Updated", updated.ApprenticeShip);
+        Assert.Equal("Updated", committee.ApprenticeShip);
     }
 
     [Fact]
@@ -98,18 +94,17 @@ public class EvalProServiceTests : IDisposable
     {
         var committee = _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
         var newDates = new List<DateTime> { FixedTestDate.AddDays(10), FixedTestDate.AddDays(20) };
-        _service.UpdateCommittee(committee.Id, testDates: newDates);
+        _service.UpdateCommittee(committee, testDates: newDates);
 
-        var updated = _service.GetCommitteeById(committee.Id);
-        Assert.NotNull(updated);
-        Assert.Equal(2, updated.TestDates.Count);
+        Assert.Equal(2, committee.TestDates.Count);
     }
 
     [Fact]
-    public void UpdateCommittee_ThrowsEntityNotFoundException_WhenNotExists()
+    public void UpdateCommittee_ThrowsEntityNotFoundException_WhenNotInStore()
     {
+        var orphan = new AuditCommittee("Orphan", "IT", new List<DateTime> { FixedTestDate });
         var ex = Assert.Throws<EntityNotFoundException>(() =>
-            _service.UpdateCommittee("non-existent-id", designation: "Test"));
+            _service.UpdateCommittee(orphan, designation: "Test"));
         Assert.Equal("Committee", ex.EntityType);
     }
 
@@ -117,14 +112,15 @@ public class EvalProServiceTests : IDisposable
     public void RemoveCommittee_RemovesCommittee()
     {
         var committee = _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        _service.RemoveCommittee(committee.Id);
+        _service.RemoveCommittee(committee);
         Assert.Null(_service.GetCommitteeById(committee.Id));
     }
 
     [Fact]
-    public void RemoveCommittee_ThrowsEntityNotFoundException_WhenNotExists()
+    public void RemoveCommittee_ThrowsEntityNotFoundException_WhenNotInStore()
     {
-        var ex = Assert.Throws<EntityNotFoundException>(() => _service.RemoveCommittee("non-existent-id"));
+        var orphan = new AuditCommittee("Orphan", "IT", new List<DateTime> { FixedTestDate });
+        var ex = Assert.Throws<EntityNotFoundException>(() => _service.RemoveCommittee(orphan));
         Assert.Equal("Committee", ex.EntityType);
     }
 
@@ -176,43 +172,44 @@ public class EvalProServiceTests : IDisposable
     public void UpdateExaminee_UpdatesName()
     {
         var examinee = _service.AddExaminee("Original", "Company", "Contact", "Project");
-        _service.UpdateExaminee(examinee.Id, name: "Updated");
+        _service.UpdateExaminee(examinee, name: "Updated");
 
-        Assert.Equal("Updated", _service.GetExamineeById(examinee.Id)!.Name);
+        Assert.Equal("Updated", examinee.Name);
     }
 
     [Fact]
     public void UpdateExaminee_UpdatesCompany()
     {
         var examinee = _service.AddExaminee("Name", "Original", "Contact", "Project");
-        _service.UpdateExaminee(examinee.Id, company: "Updated");
+        _service.UpdateExaminee(examinee, company: "Updated");
 
-        Assert.Equal("Updated", _service.GetExamineeById(examinee.Id)!.Company);
+        Assert.Equal("Updated", examinee.Company);
     }
 
     [Fact]
     public void UpdateExaminee_UpdatesContactPerson()
     {
         var examinee = _service.AddExaminee("Name", "Company", "Original", "Project");
-        _service.UpdateExaminee(examinee.Id, contactPerson: "Updated");
+        _service.UpdateExaminee(examinee, contactPerson: "Updated");
 
-        Assert.Equal("Updated", _service.GetExamineeById(examinee.Id)!.ContactPerson);
+        Assert.Equal("Updated", examinee.ContactPerson);
     }
 
     [Fact]
     public void UpdateExaminee_UpdatesProjectTitle()
     {
         var examinee = _service.AddExaminee("Name", "Company", "Contact", "Original");
-        _service.UpdateExaminee(examinee.Id, projectTitle: "Updated");
+        _service.UpdateExaminee(examinee, projectTitle: "Updated");
 
-        Assert.Equal("Updated", _service.GetExamineeById(examinee.Id)!.ProjectTitle);
+        Assert.Equal("Updated", examinee.ProjectTitle);
     }
 
     [Fact]
-    public void UpdateExaminee_ThrowsEntityNotFoundException_WhenNotExists()
+    public void UpdateExaminee_ThrowsEntityNotFoundException_WhenNotInStore()
     {
+        var orphan = new Examinee("Orphan", "Company", "Contact", "Project");
         var ex = Assert.Throws<EntityNotFoundException>(() =>
-            _service.UpdateExaminee("non-existent-id", name: "Test"));
+            _service.UpdateExaminee(orphan, name: "Test"));
         Assert.Equal("Examinee", ex.EntityType);
     }
 
@@ -220,14 +217,15 @@ public class EvalProServiceTests : IDisposable
     public void RemoveExaminee_RemovesExaminee()
     {
         var examinee = _service.AddExaminee("John", "Company", "Contact", "Project");
-        _service.RemoveExaminee(examinee.Id);
+        _service.RemoveExaminee(examinee);
         Assert.Null(_service.GetExamineeById(examinee.Id));
     }
 
     [Fact]
-    public void RemoveExaminee_ThrowsEntityNotFoundException_WhenNotExists()
+    public void RemoveExaminee_ThrowsEntityNotFoundException_WhenNotInStore()
     {
-        var ex = Assert.Throws<EntityNotFoundException>(() => _service.RemoveExaminee("non-existent-id"));
+        var orphan = new Examinee("Orphan", "Company", "Contact", "Project");
+        var ex = Assert.Throws<EntityNotFoundException>(() => _service.RemoveExaminee(orphan));
         Assert.Equal("Examinee", ex.EntityType);
     }
 
@@ -236,13 +234,11 @@ public class EvalProServiceTests : IDisposable
     {
         var committee = _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
         var examinee = _service.AddExaminee("John", "Company", "Contact", "Project");
-        _service.AssignExamineeToCommittee(committee.Id, examinee.Id);
+        _service.AssignExamineeToCommittee(committee, examinee);
 
-        _service.RemoveExaminee(examinee.Id);
+        _service.RemoveExaminee(examinee);
 
-        var updated = _service.GetCommitteeById(committee.Id);
-        Assert.NotNull(updated);
-        Assert.Null(updated.Examinee);
+        Assert.Null(committee.Examinee);
     }
 
     // ===== Committee <-> Examinee Relationship Tests =====
@@ -253,28 +249,29 @@ public class EvalProServiceTests : IDisposable
         var committee = _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
         var examinee = _service.AddExaminee("John", "Company", "Contact", "Project");
 
-        _service.AssignExamineeToCommittee(committee.Id, examinee.Id);
+        _service.AssignExamineeToCommittee(committee, examinee);
 
-        var updated = _service.GetCommitteeById(committee.Id);
-        Assert.NotNull(updated?.Examinee);
-        Assert.Equal(examinee.Id, updated.Examinee.Id);
+        Assert.NotNull(committee.Examinee);
+        Assert.Equal(examinee, committee.Examinee);
     }
 
     [Fact]
-    public void AssignExamineeToCommittee_ThrowsEntityNotFoundException_WhenExamineeNotExists()
+    public void AssignExamineeToCommittee_ThrowsEntityNotFoundException_WhenExamineeNotInStore()
     {
         var committee = _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
+        var orphan = new Examinee("Orphan", "Company", "Contact", "Project");
         var ex = Assert.Throws<EntityNotFoundException>(() =>
-            _service.AssignExamineeToCommittee(committee.Id, "non-existent-examinee"));
+            _service.AssignExamineeToCommittee(committee, orphan));
         Assert.Equal("Examinee", ex.EntityType);
     }
 
     [Fact]
-    public void AssignExamineeToCommittee_ThrowsEntityNotFoundException_WhenCommitteeNotExists()
+    public void AssignExamineeToCommittee_ThrowsEntityNotFoundException_WhenCommitteeNotInStore()
     {
+        var orphan = new AuditCommittee("Orphan", "IT", new List<DateTime> { FixedTestDate });
         var examinee = _service.AddExaminee("John", "Company", "Contact", "Project");
         var ex = Assert.Throws<EntityNotFoundException>(() =>
-            _service.AssignExamineeToCommittee("non-existent-committee", examinee.Id));
+            _service.AssignExamineeToCommittee(orphan, examinee));
         Assert.Equal("Committee", ex.EntityType);
     }
 
@@ -283,18 +280,19 @@ public class EvalProServiceTests : IDisposable
     {
         var committee = _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
         var examinee = _service.AddExaminee("John", "Company", "Contact", "Project");
-        _service.AssignExamineeToCommittee(committee.Id, examinee.Id);
+        _service.AssignExamineeToCommittee(committee, examinee);
 
-        _service.RemoveExamineeFromCommittee(committee.Id);
+        _service.RemoveExamineeFromCommittee(committee);
 
-        Assert.Null(_service.GetCommitteeById(committee.Id)?.Examinee);
+        Assert.Null(committee.Examinee);
     }
 
     [Fact]
-    public void RemoveExamineeFromCommittee_ThrowsEntityNotFoundException_WhenCommitteeNotExists()
+    public void RemoveExamineeFromCommittee_ThrowsEntityNotFoundException_WhenCommitteeNotInStore()
     {
+        var orphan = new AuditCommittee("Orphan", "IT", new List<DateTime> { FixedTestDate });
         var ex = Assert.Throws<EntityNotFoundException>(() =>
-            _service.RemoveExamineeFromCommittee("non-existent-committee"));
+            _service.RemoveExamineeFromCommittee(orphan));
         Assert.Equal("Committee", ex.EntityType);
     }
 
@@ -303,24 +301,18 @@ public class EvalProServiceTests : IDisposable
     {
         var committee = _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
         var examinee = _service.AddExaminee("John", "Company", "Contact", "Project");
-        _service.AssignExamineeToCommittee(committee.Id, examinee.Id);
+        _service.AssignExamineeToCommittee(committee, examinee);
 
-        var result = _service.GetExamineeForCommittee(committee.Id);
+        var result = _service.GetExamineeForCommittee(committee);
         Assert.NotNull(result);
-        Assert.Equal(examinee.Id, result.Id);
+        Assert.Equal(examinee, result);
     }
 
     [Fact]
     public void GetExamineeForCommittee_ReturnsNull_WhenNotAssigned()
     {
         var committee = _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
-        Assert.Null(_service.GetExamineeForCommittee(committee.Id));
-    }
-
-    [Fact]
-    public void GetExamineeForCommittee_ReturnsNull_WhenCommitteeNotExists()
-    {
-        Assert.Null(_service.GetExamineeForCommittee("non-existent-committee"));
+        Assert.Null(_service.GetExamineeForCommittee(committee));
     }
 
     [Fact]
@@ -328,18 +320,18 @@ public class EvalProServiceTests : IDisposable
     {
         var committee = _service.AddCommittee("Test", "IT", new List<DateTime> { FixedTestDate });
         var examinee = _service.AddExaminee("John", "Company", "Contact", "Project");
-        _service.AssignExamineeToCommittee(committee.Id, examinee.Id);
+        _service.AssignExamineeToCommittee(committee, examinee);
 
-        var result = _service.GetCommitteeForExaminee(examinee.Id);
+        var result = _service.GetCommitteeForExaminee(examinee);
         Assert.NotNull(result);
-        Assert.Equal(committee.Id, result.Id);
+        Assert.Equal(committee, result);
     }
 
     [Fact]
     public void GetCommitteeForExaminee_ReturnsNull_WhenNotAssigned()
     {
         var examinee = _service.AddExaminee("John", "Company", "Contact", "Project");
-        Assert.Null(_service.GetCommitteeForExaminee(examinee.Id));
+        Assert.Null(_service.GetCommitteeForExaminee(examinee));
     }
 
     // ===== Rating Assignment Tests =====
@@ -354,19 +346,19 @@ public class EvalProServiceTests : IDisposable
             new Dictionary<string, string> { { "Quality", "Well structured" } }
         );
 
-        _service.AssignProjectDocumentation(examinee.Id, doc);
+        _service.AssignProjectDocumentation(examinee, doc);
 
-        var result = _service.GetExamineeById(examinee.Id);
-        Assert.NotNull(result?.ProjectDocumentation);
-        Assert.Equal("Good work", result.ProjectDocumentation.FinalComment);
+        Assert.NotNull(examinee.ProjectDocumentation);
+        Assert.Equal("Good work", examinee.ProjectDocumentation.FinalComment);
     }
 
     [Fact]
-    public void AssignProjectDocumentation_ThrowsEntityNotFoundException_WhenExamineeNotExists()
+    public void AssignProjectDocumentation_ThrowsEntityNotFoundException_WhenExamineeNotInStore()
     {
+        var orphan = new Examinee("Orphan", "Company", "Contact", "Project");
         var doc = new ProjectDocumentation("Good", new Dictionary<string, int>(), new Dictionary<string, string>());
         var ex = Assert.Throws<EntityNotFoundException>(() =>
-            _service.AssignProjectDocumentation("non-existent-id", doc));
+            _service.AssignProjectDocumentation(orphan, doc));
         Assert.Equal("Examinee", ex.EntityType);
     }
 
@@ -380,19 +372,19 @@ public class EvalProServiceTests : IDisposable
             new Dictionary<string, string> { { "Clarity", "Very clear" } }
         );
 
-        _service.AssignProjectPresentation(examinee.Id, pres);
+        _service.AssignProjectPresentation(examinee, pres);
 
-        var result = _service.GetExamineeById(examinee.Id);
-        Assert.NotNull(result?.ProjectPresentation);
-        Assert.Equal("Excellent", result.ProjectPresentation.FinalComment);
+        Assert.NotNull(examinee.ProjectPresentation);
+        Assert.Equal("Excellent", examinee.ProjectPresentation.FinalComment);
     }
 
     [Fact]
-    public void AssignProjectPresentation_ThrowsEntityNotFoundException_WhenExamineeNotExists()
+    public void AssignProjectPresentation_ThrowsEntityNotFoundException_WhenExamineeNotInStore()
     {
+        var orphan = new Examinee("Orphan", "Company", "Contact", "Project");
         var pres = new ProjectPresentation("Good", new Dictionary<string, int>(), new Dictionary<string, string>());
         var ex = Assert.Throws<EntityNotFoundException>(() =>
-            _service.AssignProjectPresentation("non-existent-id", pres));
+            _service.AssignProjectPresentation(orphan, pres));
         Assert.Equal("Examinee", ex.EntityType);
     }
 
@@ -406,19 +398,19 @@ public class EvalProServiceTests : IDisposable
             new Dictionary<string, string> { { "Depth", "Good understanding" } }
         );
 
-        _service.AssignTechConversation(examinee.Id, conv);
+        _service.AssignTechConversation(examinee, conv);
 
-        var result = _service.GetExamineeById(examinee.Id);
-        Assert.NotNull(result?.TechConversation);
-        Assert.Equal("Solid knowledge", result.TechConversation.FinalComment);
+        Assert.NotNull(examinee.TechConversation);
+        Assert.Equal("Solid knowledge", examinee.TechConversation.FinalComment);
     }
 
     [Fact]
-    public void AssignTechConversation_ThrowsEntityNotFoundException_WhenExamineeNotExists()
+    public void AssignTechConversation_ThrowsEntityNotFoundException_WhenExamineeNotInStore()
     {
+        var orphan = new Examinee("Orphan", "Company", "Contact", "Project");
         var conv = new TechConversation("Good", new Dictionary<string, int>(), new Dictionary<string, string>());
         var ex = Assert.Throws<EntityNotFoundException>(() =>
-            _service.AssignTechConversation("non-existent-id", conv));
+            _service.AssignTechConversation(orphan, conv));
         Assert.Equal("Examinee", ex.EntityType);
     }
 
@@ -428,20 +420,20 @@ public class EvalProServiceTests : IDisposable
         var examinee = _service.AddExaminee("John", "Company", "Contact", "Project");
         var exam = new SupplementaryExamination("Networking", 85, new List<string> { "What is TCP/IP?" });
 
-        _service.AssignSupplementaryExamination(examinee.Id, exam);
+        _service.AssignSupplementaryExamination(examinee, exam);
 
-        var result = _service.GetExamineeById(examinee.Id);
-        Assert.NotNull(result?.SupplementaryExamination);
-        Assert.Equal("Networking", result.SupplementaryExamination.ChosenTestArea);
-        Assert.Equal(85, result.SupplementaryExamination.Points);
+        Assert.NotNull(examinee.SupplementaryExamination);
+        Assert.Equal("Networking", examinee.SupplementaryExamination.ChosenTestArea);
+        Assert.Equal(85, examinee.SupplementaryExamination.Points);
     }
 
     [Fact]
-    public void AssignSupplementaryExamination_ThrowsEntityNotFoundException_WhenExamineeNotExists()
+    public void AssignSupplementaryExamination_ThrowsEntityNotFoundException_WhenExamineeNotInStore()
     {
+        var orphan = new Examinee("Orphan", "Company", "Contact", "Project");
         var exam = new SupplementaryExamination("Networking", 70, new List<string> { "Q1" });
         var ex = Assert.Throws<EntityNotFoundException>(() =>
-            _service.AssignSupplementaryExamination("non-existent-id", exam));
+            _service.AssignSupplementaryExamination(orphan, exam));
         Assert.Equal("Examinee", ex.EntityType);
     }
 
