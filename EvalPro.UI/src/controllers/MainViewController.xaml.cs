@@ -1,20 +1,18 @@
-﻿using System.Windows;
+using System.Windows;
+using EvalProUI.model;
+using EvalProService.impl.service;
 
 namespace EvalProUI
 {
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        private readonly MainViewModel _viewModel;
+
+        public MainWindow(EvalProService service)
         {
             InitializeComponent();
-            DataContext = this;
-        }
-
-        // WICHTIG: public PROPERTY, kein Feld!
-        // Gefixt: Rückgabe war rekursiv und hat zu StackOverflow geführt.
-        public string GreetingName
-        {
-            get { return $"Guten Morgen, Benutzer"; }
+            _viewModel = new MainViewModel(service);
+            DataContext = _viewModel;
         }
     }
 }

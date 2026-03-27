@@ -1,0 +1,176 @@
+<UserControl x:Class="EvalProUI.views.ExamineeDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32">
+        <StackPanel MaxWidth="1000">
+
+            <!-- Back Button + Title -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <Button Content="← Zurück" Style="{StaticResource SecondaryButton}" Command="{Binding BackCommand}"
+                        VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding ExamineeName}" Style="{StaticResource HeadingStyle}" FontSize="28"
+                           Margin="12,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Examinee Info Card -->
+            <Border Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,12">
+                        <TextBlock Text="Unternehmen" Style="{StaticResource LabelStyle}"/>
+                        <TextBlock Text="{Binding ExamineeCompany}" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,12">
+                        <TextBlock Text="Ansprechpartner" Style="{StaticResource LabelStyle}"/>
+                        <TextBlock Text="{Binding ExamineeContactPerson}" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,12">
+                        <TextBlock Text="Projekttitel" Style="{StaticResource LabelStyle}"/>
+                        <TextBlock Text="{Binding ExamineeProjectTitle}" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,12">
+                        <TextBlock Text="Prüfungsausschuss" Style="{StaticResource LabelStyle}"/>
+                        <TextBlock Text="{Binding AssignedCommittee}" FontSize="15" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Rating Status Overview -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Bewertungsstatus" Style="{StaticResource SubheadingStyle}" Margin="0,0,0,12"/>
+                    <UniformGrid Columns="4">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="Dokumentation" Style="{StaticResource LabelStyle}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding DocStatus}" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="Präsentation" Style="{StaticResource LabelStyle}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding PresStatus}" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="Fachgespräch" Style="{StaticResource LabelStyle}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding TechStatus}" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="Ergänzungsprüfung" Style="{StaticResource LabelStyle}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding SuppStatus}" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Tab-like rating sections -->
+
+            <!-- Project Documentation -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="📄 Projektdokumentation" Style="{StaticResource SubheadingStyle}" FontSize="18" Margin="0,0,0,16"/>
+
+                    <TextBlock Style="{StaticResource LabelStyle}">
+                        Kriterien (pro Zeile: "Kriterium: Punkte - Kommentar")
+                    </TextBlock>
+                    <TextBox Text="{Binding DocCriteria, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"/>
+
+                    <TextBlock Text="Abschlusskommentar" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding DocComment, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+
+                    <Button Content="Dokumentation speichern" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding SaveDocCommand}" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Project Presentation -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="🎤 Projektpräsentation" Style="{StaticResource SubheadingStyle}" FontSize="18" Margin="0,0,0,16"/>
+
+                    <TextBlock Style="{StaticResource LabelStyle}">
+                        Kriterien (pro Zeile: "Kriterium: Punkte - Kommentar")
+                    </TextBlock>
+                    <TextBox Text="{Binding PresCriteria, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"/>
+
+                    <TextBlock Text="Abschlusskommentar" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding PresComment, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+
+                    <Button Content="Präsentation speichern" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding SavePresCommand}" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Tech Conversation -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="💬 Fachgespräch" Style="{StaticResource SubheadingStyle}" FontSize="18" Margin="0,0,0,16"/>
+
+                    <TextBlock Style="{StaticResource LabelStyle}">
+                        Kriterien (pro Zeile: "Kriterium: Punkte - Kommentar")
+                    </TextBlock>
+                    <TextBox Text="{Binding TechCriteria, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"/>
+
+                    <TextBlock Text="Abschlusskommentar" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding TechComment, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60"/>
+
+                    <Button Content="Fachgespräch speichern" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding SaveTechCommand}" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Supplementary Examination -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="📝 Ergänzungsprüfung" Style="{StaticResource SubheadingStyle}" FontSize="18" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="Prüfungsgebiet" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding SuppTestArea, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"/>
+
+                    <TextBlock Text="Punkte" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding SuppPoints, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}" Width="120" HorizontalAlignment="Left"/>
+
+                    <TextBlock Text="Fragen (eine pro Zeile)" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding SuppQuestions, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80"/>
+
+                    <Button Content="Ergänzungsprüfung speichern" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding SaveSuppCommand}" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,23 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:model="clr-namespace:EvalProUI.model"
+                    xmlns:views="clr-namespace:EvalProUI.views">
+
+    <!-- Map ViewModels to Views -->
+    <DataTemplate DataType="{x:Type model:HomeViewModel}">
+        <views:HomeView/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type model:CommitteeListViewModel}">
+        <views:CommitteeListView/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type model:ExamineeListViewModel}">
+        <views:ExamineeListView/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type model:ExamineeDetailViewModel}">
+        <views:ExamineeDetailView/>
+    </DataTemplate>
+
+</ResourceDictionary>

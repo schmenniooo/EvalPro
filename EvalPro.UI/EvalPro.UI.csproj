@@ -17,4 +17,8 @@
       <Folder Include="src\views\" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\EvalPro.Service\EvalPro.Service.csproj" />
+    </ItemGroup>
+
 </Project>

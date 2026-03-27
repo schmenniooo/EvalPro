@@ -2,6 +2,8 @@ namespace EvalProUI;
 
 using System;
 using System.Windows;
+using EvalProService.impl.model.events;
+using EvalProService.impl.service;
 
 static class Program
 {
@@ -11,8 +13,21 @@ static class Program
     [STAThread]
     static void Main()
     {
+        using var service = new EvalProService();
+
+        // Surface auto-save errors to the user
+        service.OnSaveError += (_, args) =>
+        {
+            var severity = args.IsCritical ? "KRITISCH" : "Warnung";
+            MessageBox.Show(
+                $"Fehler beim Speichern: {args.Exception.Message}",
+                $"Speicherfehler ({severity})",
+                MessageBoxButton.OK,
+                args.IsCritical ? MessageBoxImage.Error : MessageBoxImage.Warning);
+        };
+
         var app = new Application();
-        var main = new MainWindow();
+        var main = new MainWindow(service);
         app.Run(main);
     }
 }
