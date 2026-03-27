@@ -1,0 +1,82 @@
+<UserControl x:Class="EvalProUI.views.ExamineeListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32">
+        <StackPanel MaxWidth="1000">
+
+            <!-- Page Title -->
+            <TextBlock Text="Prüflinge" Style="{StaticResource HeadingStyle}" FontSize="28"/>
+
+            <!-- Data Grid -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,12">
+                        <TextBlock Text="Alle Prüflinge" Style="{StaticResource SubheadingStyle}" DockPanel.Dock="Left"/>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Button Content="📋 Detail" Style="{StaticResource SecondaryButton}" Command="{Binding ViewDetailCommand}"/>
+                            <Button Content="＋ Neu" Style="{StaticResource PrimaryButton}" Command="{Binding NewCommand}"/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <DataGrid Style="{StaticResource ModernDataGrid}"
+                              ItemsSource="{Binding Examinees}"
+                              SelectedItem="{Binding SelectedExaminee}"
+                              MinHeight="150" MaxHeight="350">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Unternehmen" Binding="{Binding Company}" Width="*"/>
+                            <DataGridTextColumn Header="Ansprechpartner" Binding="{Binding ContactPerson}" Width="*"/>
+                            <DataGridTextColumn Header="Projekttitel" Binding="{Binding ProjectTitle}" Width="*"/>
+                            <DataGridTextColumn Header="Erstellt" Binding="{Binding CreatedAt, StringFormat=dd.MM.yyyy}" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Form -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Margin="0,0,0,16">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource SubheadingStyle}">
+                                <Setter Property="Text" Value="Neuen Prüfling erstellen"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                        <Setter Property="Text" Value="Prüfling bearbeiten"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <TextBlock Text="Name" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"/>
+
+                    <TextBlock Text="Unternehmen" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding FormCompany, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"/>
+
+                    <TextBlock Text="Ansprechpartner" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding FormContactPerson, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"/>
+
+                    <TextBlock Text="Projekttitel" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding FormProjectTitle, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Speichern" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}"/>
+                        <Button Content="Löschen" Style="{StaticResource DangerButton}" Command="{Binding DeleteCommand}"/>
+                        <Button Content="Abbrechen" Style="{StaticResource SecondaryButton}" Command="{Binding CancelCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

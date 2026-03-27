@@ -1,0 +1,75 @@
+<UserControl x:Class="EvalProUI.views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32">
+        <StackPanel MaxWidth="900">
+
+            <!-- Page Title -->
+            <TextBlock Text="Übersicht" Style="{StaticResource HeadingStyle}" FontSize="28" Margin="0,0,0,24"/>
+
+            <!-- Summary Cards -->
+            <UniformGrid Columns="2" Margin="0,0,0,24">
+
+                <!-- Committee Count Card -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Prüfungsausschüsse" Style="{StaticResource LabelStyle}" FontSize="14"/>
+                        <TextBlock Text="{Binding CommitteeCount}" FontSize="48" FontWeight="Bold"
+                                   Foreground="{StaticResource AccentBrush}" Margin="0,8,0,0"/>
+                        <TextBlock Text="Registriert" Style="{StaticResource LabelStyle}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Examinee Count Card -->
+                <Border Style="{StaticResource CardStyle}" Margin="12,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Prüflinge" Style="{StaticResource LabelStyle}" FontSize="14"/>
+                        <TextBlock Text="{Binding ExamineeCount}" FontSize="48" FontWeight="Bold"
+                                   Foreground="{StaticResource SuccessBrush}" Margin="0,8,0,0"/>
+                        <TextBlock Text="Registriert" Style="{StaticResource LabelStyle}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <UniformGrid Columns="2" Margin="0,0,0,24">
+
+                <!-- Assigned Count Card -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Zugewiesen" Style="{StaticResource LabelStyle}" FontSize="14"/>
+                        <TextBlock Text="{Binding AssignedCount}" FontSize="48" FontWeight="Bold"
+                                   Foreground="#8B5CF6" Margin="0,8,0,0"/>
+                        <TextBlock Text="Prüfling ↔ Ausschuss" Style="{StaticResource LabelStyle}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Unassigned Card -->
+                <Border Style="{StaticResource CardStyle}" Margin="12,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Nicht zugewiesen" Style="{StaticResource LabelStyle}" FontSize="14"/>
+                        <TextBlock Text="{Binding UnassignedExamineeCount}" FontSize="48" FontWeight="Bold"
+                                   Foreground="{StaticResource WarningBrush}" Margin="0,8,0,0"/>
+                        <TextBlock Text="Prüflinge ohne Ausschuss" Style="{StaticResource LabelStyle}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Welcome Message -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Willkommen bei EvalPro" Style="{StaticResource SubheadingStyle}" FontSize="18"/>
+                    <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14" LineHeight="22">
+                        Verwenden Sie die Navigation auf der linken Seite, um Prüfungsausschüsse und Prüflinge zu verwalten.
+                        Sie können Prüflinge Ausschüssen zuweisen und Bewertungen für Dokumentation, Präsentation,
+                        Fachgespräch und Ergänzungsprüfung vergeben.
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

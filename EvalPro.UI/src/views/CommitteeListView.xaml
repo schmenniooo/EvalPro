@@ -1,0 +1,95 @@
+<UserControl x:Class="EvalProUI.views.CommitteeListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32">
+        <StackPanel MaxWidth="1000">
+
+            <!-- Page Title -->
+            <TextBlock Text="Prüfungsausschüsse" Style="{StaticResource HeadingStyle}" FontSize="28"/>
+
+            <!-- Data Grid -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,12">
+                        <TextBlock Text="Alle Ausschüsse" Style="{StaticResource SubheadingStyle}" DockPanel.Dock="Left"/>
+                        <Button Content="＋ Neu" Style="{StaticResource PrimaryButton}" DockPanel.Dock="Right"
+                                HorizontalAlignment="Right" Command="{Binding NewCommand}"/>
+                    </DockPanel>
+
+                    <DataGrid Style="{StaticResource ModernDataGrid}"
+                              ItemsSource="{Binding Committees}"
+                              SelectedItem="{Binding SelectedCommittee}"
+                              MinHeight="150" MaxHeight="350">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Bezeichnung" Binding="{Binding Designation}" Width="*"/>
+                            <DataGridTextColumn Header="Ausbildungsberuf" Binding="{Binding ApprenticeShip}" Width="*"/>
+                            <DataGridTextColumn Header="Prüfling" Binding="{Binding Examinee.Name}" Width="*"/>
+                            <DataGridTextColumn Header="Erstellt" Binding="{Binding CreatedAt, StringFormat=dd.MM.yyyy}" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Form -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Margin="0,0,0,16">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource SubheadingStyle}">
+                                <Setter Property="Text" Value="Neuen Ausschuss erstellen"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                        <Setter Property="Text" Value="Ausschuss bearbeiten"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <TextBlock Text="Bezeichnung" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding FormDesignation, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"/>
+
+                    <TextBlock Text="Ausbildungsberuf" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding FormApprenticeShip, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"/>
+
+                    <TextBlock Text="Prüfungstermine (kommagetrennt, z.B. 15.06.2026, 20.06.2026)" Style="{StaticResource LabelStyle}"/>
+                    <TextBox Text="{Binding FormTestDates, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Speichern" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}"/>
+                        <Button Content="Löschen" Style="{StaticResource DangerButton}" Command="{Binding DeleteCommand}"/>
+                        <Button Content="Abbrechen" Style="{StaticResource SecondaryButton}" Command="{Binding CancelCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Examinee Assignment Section -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Prüfling zuweisen" Style="{StaticResource SubheadingStyle}" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="Prüfling auswählen" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox ItemsSource="{Binding AvailableExaminees}"
+                              SelectedItem="{Binding SelectedAssignExaminee}"
+                              DisplayMemberPath="Name"
+                              Margin="0,0,0,12" Padding="8,6" FontSize="14"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Zuweisen" Style="{StaticResource SuccessButton}"
+                                Command="{Binding AssignExamineeCommand}"/>
+                        <Button Content="Zuweisung entfernen" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding RemoveExamineeCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
