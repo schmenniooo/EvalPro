@@ -8,3 +8,5 @@ riderModule.iml
 
 /.idea/
 
+config.json
+evalpro*.log
