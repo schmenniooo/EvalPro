@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using EvalProService.impl.model.entities;
 using EvalProService.impl.model.ratings;
-using EvalProService.impl.service;
+using Service = EvalProService.impl.service.EvalProService;
 
 namespace EvalProUI.model;
 
@@ -13,16 +13,20 @@ namespace EvalProUI.model;
 /// </summary>
 public class ExamineeDetailViewModel : BaseViewModel
 {
-    private readonly EvalProService _service;
+    private readonly Service _service;
     private readonly Examinee _examinee;
     private readonly Action _navigateBack;
 
+    /// <summary>Name of the examinee.</summary>
     public string ExamineeName => _examinee.Name;
+    /// <summary>Company of the examinee.</summary>
     public string ExamineeCompany => _examinee.Company;
+    /// <summary>Contact person for the examinee.</summary>
     public string ExamineeContactPerson => _examinee.ContactPerson;
+    /// <summary>Project title of the examinee.</summary>
     public string ExamineeProjectTitle => _examinee.ProjectTitle;
 
-    // --- Assigned Committee Info ---
+    /// <summary>Display text for the assigned committee, or a fallback message.</summary>
     public string AssignedCommittee
     {
         get
@@ -33,45 +37,67 @@ public class ExamineeDetailViewModel : BaseViewModel
     }
 
     // --- Rating Status ---
+    /// <summary>Status text for the project documentation rating.</summary>
     public string DocStatus => _examinee.ProjectDocumentation != null ? "✓ Bewertet" : "○ Ausstehend";
+    /// <summary>Status text for the project presentation rating.</summary>
     public string PresStatus => _examinee.ProjectPresentation != null ? "✓ Bewertet" : "○ Ausstehend";
+    /// <summary>Status text for the tech conversation rating.</summary>
     public string TechStatus => _examinee.TechConversation != null ? "✓ Bewertet" : "○ Ausstehend";
+    /// <summary>Status text for the supplementary examination rating.</summary>
     public string SuppStatus => _examinee.SupplementaryExamination != null ? "✓ Bewertet" : "○ Ausstehend";
 
     // --- Project Documentation Form ---
     private string _docCriteria = "";
+    /// <summary>Form field for project documentation criteria (points and comments).</summary>
     public string DocCriteria { get => _docCriteria; set => SetProperty(ref _docCriteria, value); }
     private string _docComment = "";
+    /// <summary>Form field for the project documentation final comment.</summary>
     public string DocComment { get => _docComment; set => SetProperty(ref _docComment, value); }
 
     // --- Project Presentation Form ---
     private string _presCriteria = "";
+    /// <summary>Form field for project presentation criteria (points and comments).</summary>
     public string PresCriteria { get => _presCriteria; set => SetProperty(ref _presCriteria, value); }
     private string _presComment = "";
+    /// <summary>Form field for the project presentation final comment.</summary>
     public string PresComment { get => _presComment; set => SetProperty(ref _presComment, value); }
 
     // --- Tech Conversation Form ---
     private string _techCriteria = "";
+    /// <summary>Form field for tech conversation criteria (points and comments).</summary>
     public string TechCriteria { get => _techCriteria; set => SetProperty(ref _techCriteria, value); }
     private string _techComment = "";
+    /// <summary>Form field for the tech conversation final comment.</summary>
     public string TechComment { get => _techComment; set => SetProperty(ref _techComment, value); }
 
     // --- Supplementary Examination Form ---
     private string _suppTestArea = "";
+    /// <summary>Form field for the supplementary examination test area.</summary>
     public string SuppTestArea { get => _suppTestArea; set => SetProperty(ref _suppTestArea, value); }
     private string _suppPoints = "0";
+    /// <summary>Form field for the supplementary examination points.</summary>
     public string SuppPoints { get => _suppPoints; set => SetProperty(ref _suppPoints, value); }
     private string _suppQuestions = "";
+    /// <summary>Form field for the supplementary examination questions (one per line).</summary>
     public string SuppQuestions { get => _suppQuestions; set => SetProperty(ref _suppQuestions, value); }
 
     // --- Commands ---
+    /// <summary>Command to save the project documentation rating.</summary>
     public ICommand SaveDocCommand { get; }
+    /// <summary>Command to save the project presentation rating.</summary>
     public ICommand SavePresCommand { get; }
+    /// <summary>Command to save the tech conversation rating.</summary>
     public ICommand SaveTechCommand { get; }
+    /// <summary>Command to save the supplementary examination rating.</summary>
     public ICommand SaveSuppCommand { get; }
+    /// <summary>Command to navigate back to the examinee list.</summary>
     public ICommand BackCommand { get; }
 
-    public ExamineeDetailViewModel(EvalProService service, Examinee examinee, Action navigateBack)
+    /// <summary>Initializes the examinee detail view model.</summary>
+    /// <param name="service">The backend service.</param>
+    /// <param name="examinee">The examinee to display.</param>
+    /// <param name="navigateBack">Callback to navigate back to the list view.</param>
+    public ExamineeDetailViewModel(Service service, Examinee examinee, Action navigateBack)
     {
         _service = service;
         _examinee = examinee;

@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using EvalProService.impl.model.entities;
-using EvalProService.impl.service;
+using Service = EvalProService.impl.service.EvalProService;
 
 namespace EvalProUI.model;
 
@@ -11,11 +11,13 @@ namespace EvalProUI.model;
 /// </summary>
 public class CommitteeListViewModel : BaseViewModel
 {
-    private readonly EvalProService _service;
+    private readonly Service _service;
 
+    /// <summary>Observable collection of all audit committees.</summary>
     public ObservableCollection<AuditCommittee> Committees { get; } = new();
 
     private AuditCommittee? _selectedCommittee;
+    /// <summary>The currently selected audit committee.</summary>
     public AuditCommittee? SelectedCommittee
     {
         get => _selectedCommittee;
@@ -42,6 +44,7 @@ public class CommitteeListViewModel : BaseViewModel
 
     // --- Form Fields ---
     private string _formDesignation = "";
+    /// <summary>Form field for the committee designation.</summary>
     public string FormDesignation
     {
         get => _formDesignation;
@@ -49,6 +52,7 @@ public class CommitteeListViewModel : BaseViewModel
     }
 
     private string _formApprenticeShip = "";
+    /// <summary>Form field for the apprenticeship type.</summary>
     public string FormApprenticeShip
     {
         get => _formApprenticeShip;
@@ -56,6 +60,7 @@ public class CommitteeListViewModel : BaseViewModel
     }
 
     private string _formTestDates = "";
+    /// <summary>Form field for comma-separated test dates.</summary>
     public string FormTestDates
     {
         get => _formTestDates;
@@ -63,18 +68,22 @@ public class CommitteeListViewModel : BaseViewModel
     }
 
     private bool _isEditing;
+    /// <summary>Whether the form is in edit mode (vs. create mode).</summary>
     public bool IsEditing
     {
         get => _isEditing;
         set => SetProperty(ref _isEditing, value);
     }
 
+    /// <summary>Whether a committee is selected and can be deleted.</summary>
     public bool CanDelete => SelectedCommittee != null;
 
     // --- Examinee Assignment ---
+    /// <summary>Examinees available for assignment.</summary>
     public ObservableCollection<Examinee> AvailableExaminees { get; } = new();
 
     private Examinee? _selectedAssignExaminee;
+    /// <summary>The examinee selected for assignment to the current committee.</summary>
     public Examinee? SelectedAssignExaminee
     {
         get => _selectedAssignExaminee;
@@ -82,14 +91,22 @@ public class CommitteeListViewModel : BaseViewModel
     }
 
     // --- Commands ---
+    /// <summary>Command to save the current form (create or update).</summary>
     public ICommand SaveCommand { get; }
+    /// <summary>Command to delete the selected committee.</summary>
     public ICommand DeleteCommand { get; }
+    /// <summary>Command to start creating a new committee.</summary>
     public ICommand NewCommand { get; }
+    /// <summary>Command to cancel the current form edit.</summary>
     public ICommand CancelCommand { get; }
+    /// <summary>Command to assign the selected examinee to the selected committee.</summary>
     public ICommand AssignExamineeCommand { get; }
+    /// <summary>Command to remove the assigned examinee from the selected committee.</summary>
     public ICommand RemoveExamineeCommand { get; }
 
-    public CommitteeListViewModel(EvalProService service)
+    /// <summary>Initializes the committee list view model with the given service.</summary>
+    /// <param name="service">The backend service.</param>
+    public CommitteeListViewModel(Service service)
     {
         _service = service;
         SaveCommand = new RelayCommand(Save);
@@ -101,6 +118,7 @@ public class CommitteeListViewModel : BaseViewModel
         LoadData();
     }
 
+    /// <summary>Reloads all committees and available examinees from the service.</summary>
     public void LoadData()
     {
         Committees.Clear();

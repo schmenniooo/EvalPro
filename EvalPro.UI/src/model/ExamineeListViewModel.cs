@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using EvalProService.impl.model.entities;
-using EvalProService.impl.service;
+using Service = EvalProService.impl.service.EvalProService;
 
 namespace EvalProUI.model;
 
@@ -11,12 +11,14 @@ namespace EvalProUI.model;
 /// </summary>
 public class ExamineeListViewModel : BaseViewModel
 {
-    private readonly EvalProService _service;
+    private readonly Service _service;
     private readonly Action<Examinee> _navigateToDetail;
 
+    /// <summary>Observable collection of all examinees.</summary>
     public ObservableCollection<Examinee> Examinees { get; } = new();
 
     private Examinee? _selectedExaminee;
+    /// <summary>The currently selected examinee.</summary>
     public Examinee? SelectedExaminee
     {
         get => _selectedExaminee;
@@ -40,6 +42,7 @@ public class ExamineeListViewModel : BaseViewModel
 
     // --- Form Fields ---
     private string _formName = "";
+    /// <summary>Form field for the examinee name.</summary>
     public string FormName
     {
         get => _formName;
@@ -47,6 +50,7 @@ public class ExamineeListViewModel : BaseViewModel
     }
 
     private string _formCompany = "";
+    /// <summary>Form field for the examinee company.</summary>
     public string FormCompany
     {
         get => _formCompany;
@@ -54,6 +58,7 @@ public class ExamineeListViewModel : BaseViewModel
     }
 
     private string _formContactPerson = "";
+    /// <summary>Form field for the contact person.</summary>
     public string FormContactPerson
     {
         get => _formContactPerson;
@@ -61,6 +66,7 @@ public class ExamineeListViewModel : BaseViewModel
     }
 
     private string _formProjectTitle = "";
+    /// <summary>Form field for the project title.</summary>
     public string FormProjectTitle
     {
         get => _formProjectTitle;
@@ -68,23 +74,34 @@ public class ExamineeListViewModel : BaseViewModel
     }
 
     private bool _isEditing;
+    /// <summary>Whether the form is in edit mode (vs. create mode).</summary>
     public bool IsEditing
     {
         get => _isEditing;
         set => SetProperty(ref _isEditing, value);
     }
 
+    /// <summary>Whether an examinee is selected and can be deleted.</summary>
     public bool CanDelete => SelectedExaminee != null;
+    /// <summary>Whether an examinee is selected and its details can be viewed.</summary>
     public bool CanViewDetail => SelectedExaminee != null;
 
     // --- Commands ---
+    /// <summary>Command to save the current form (create or update).</summary>
     public ICommand SaveCommand { get; }
+    /// <summary>Command to delete the selected examinee.</summary>
     public ICommand DeleteCommand { get; }
+    /// <summary>Command to start creating a new examinee.</summary>
     public ICommand NewCommand { get; }
+    /// <summary>Command to cancel the current form edit.</summary>
     public ICommand CancelCommand { get; }
+    /// <summary>Command to navigate to the detail view for the selected examinee.</summary>
     public ICommand ViewDetailCommand { get; }
 
-    public ExamineeListViewModel(EvalProService service, Action<Examinee> navigateToDetail)
+    /// <summary>Initializes the examinee list view model.</summary>
+    /// <param name="service">The backend service.</param>
+    /// <param name="navigateToDetail">Callback to navigate to the examinee detail view.</param>
+    public ExamineeListViewModel(Service service, Action<Examinee> navigateToDetail)
     {
         _service = service;
         _navigateToDetail = navigateToDetail;
@@ -96,6 +113,7 @@ public class ExamineeListViewModel : BaseViewModel
         LoadData();
     }
 
+    /// <summary>Reloads all examinees from the service.</summary>
     public void LoadData()
     {
         Examinees.Clear();

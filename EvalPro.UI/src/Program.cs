@@ -2,8 +2,7 @@ namespace EvalProUI;
 
 using System;
 using System.Windows;
-using EvalProService.impl.model.events;
-using EvalProService.impl.service;
+using Service = EvalProService.impl.service.EvalProService;
 
 static class Program
 {
@@ -13,7 +12,7 @@ static class Program
     [STAThread]
     static void Main()
     {
-        using var service = new EvalProService();
+        using var service = new Service();
 
         // Surface auto-save errors to the user
         service.OnSaveError += (_, args) =>
@@ -27,6 +26,17 @@ static class Program
         };
 
         var app = new Application();
+
+        // Load resource dictionaries at application level so all views can resolve them
+        app.Resources.MergedDictionaries.Add(new ResourceDictionary
+        {
+            Source = new Uri("/EvalPro.UI;component/src/views/Styles.xaml", UriKind.Relative)
+        });
+        app.Resources.MergedDictionaries.Add(new ResourceDictionary
+        {
+            Source = new Uri("/EvalPro.UI;component/src/views/DataTemplates.xaml", UriKind.Relative)
+        });
+
         var main = new MainWindow(service);
         app.Run(main);
     }

@@ -1,6 +1,6 @@
 using System.Windows.Input;
 using EvalProService.impl.model.entities;
-using EvalProService.impl.service;
+using Service = EvalProService.impl.service.EvalProService;
 
 namespace EvalProUI.model;
 
@@ -10,9 +10,10 @@ namespace EvalProUI.model;
 /// </summary>
 public class MainViewModel : BaseViewModel
 {
-    private readonly EvalProService _service;
+    private readonly Service _service;
 
     private BaseViewModel _currentView = null!;
+    /// <summary>The currently displayed child view model.</summary>
     public BaseViewModel CurrentView
     {
         get => _currentView;
@@ -20,6 +21,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private string _selectedNavItem = "Home";
+    /// <summary>The currently selected navigation item name.</summary>
     public string SelectedNavItem
     {
         get => _selectedNavItem;
@@ -30,12 +32,16 @@ public class MainViewModel : BaseViewModel
         }
     }
 
-    // Navigation commands
+    /// <summary>Command to navigate to the home view.</summary>
     public ICommand NavigateHomeCommand { get; }
+    /// <summary>Command to navigate to the committees view.</summary>
     public ICommand NavigateCommitteesCommand { get; }
+    /// <summary>Command to navigate to the examinees view.</summary>
     public ICommand NavigateExamineesCommand { get; }
 
-    public MainViewModel(EvalProService service)
+    /// <summary>Initializes the main view model with the given service.</summary>
+    /// <param name="service">The backend service.</param>
+    public MainViewModel(Service service)
     {
         _service = service;
 
@@ -46,6 +52,8 @@ public class MainViewModel : BaseViewModel
         NavigateTo("Home");
     }
 
+    /// <summary>Navigates to the view identified by the given name.</summary>
+    /// <param name="viewName">Name of the target view.</param>
     public void NavigateTo(string viewName)
     {
         _selectedNavItem = viewName;
@@ -60,6 +68,8 @@ public class MainViewModel : BaseViewModel
         };
     }
 
+    /// <summary>Navigates to the detail view for the given examinee.</summary>
+    /// <param name="examinee">The examinee to show details for.</param>
     public void NavigateToExamineeDetail(Examinee examinee)
     {
         CurrentView = new ExamineeDetailViewModel(_service, examinee, () => NavigateTo("Prüflinge"));
